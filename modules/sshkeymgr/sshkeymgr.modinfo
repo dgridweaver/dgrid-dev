@@ -1,0 +1,4 @@
+name="sshkeymgr"
+description="session management - ssh-agent for dgrid"
+core="1.x"
+version="1.x-0.1"

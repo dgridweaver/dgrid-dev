@@ -1,0 +1,27 @@
+#!/bin/bash
+
+################## dgrid header1 ################ 
+if [ x$ORIGDIR == x ]; then
+export ORIGDIR=`pwd`
+fi
+
+_file0=`readlink -f $0`
+_dir0=`dirname $_file0`
+cd ${_dir0}
+
+. ./libdgrid.sh
+################## [END] dgrid header1 ################ 
+
+# devel debug utility, just in case...
+
+echo
+echo "#########"
+echo
+set|grep ^DGRID
+set|grep ^GRID
+set|grep ^MODINFO_
+set|grep ^MODULE_
+set|grep ^mods_
+
+echo
+

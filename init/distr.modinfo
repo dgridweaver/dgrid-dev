@@ -1,0 +1,7 @@
+name="distr"
+description="dgrid distribution mode support"
+depend="bashengine"
+group="core"
+core="1.x"
+version="1.x-0.3"
+distribution_mode="1"

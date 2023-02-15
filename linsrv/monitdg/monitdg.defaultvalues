@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# INTERNAL
+
+
+#export MONITZG_timestamp=`system_timestamp_dirname`
+#export MONITZG_workdir="${GRIDBASEDIR}/not-in-vcs/monitdg/current-${MONITZG_timestamp}"
+export MONITZG_workdir="${GRIDBASEDIR}/not-in-vcs/monitdg/current"
+
+#monitdg_monit_CFG=$DGRIDDIR/
+export monitdg_config_name_use="monit-generated.conf"
+
+#monitdg_monit_base_opts="-I"
+monitdg_monit_base_opts=""
+
+##############################
+
+monitdg_bin_path=/usr/bin/monit
+monit_daemon_seconds=5
+#monitdg_monit=system|runtime|
+monitdg_monit=system
+

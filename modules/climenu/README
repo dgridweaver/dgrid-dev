@@ -1,0 +1,6 @@
+
+climenu
+-------
+Module to create "universal" scripts that call functions use it name as
+parameter.Script take name of itself as action and dir name as host(or 
+node, or something) name and call functions using this as parameters.

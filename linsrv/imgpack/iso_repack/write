@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [ "x$imgpack_type" == "xiso_repack" ]; then
+echo -n
+else
+echo "imgpack_type not correct"
+exit
+fi
+
+#mkdir -p ${imgpack_unpack_workdir}/${imgpack_id_name}
+_s=${imgpack_unpack_workdir}/${imgpack_id_name}
+
+_out=${imgpack_unpack_workdir}/${imgpack_id_name}_out.iso
+echo "pack ${_s}"
+echo "out=${_out}"
+
+cd $imgpack_this_cfgdir
+
+_dev="/dev/disk/by-id/${imgpack_dev_disk_byid}"
+echo "------------------------------------"
+echo dd if=${_out} of=${_dev}
+echo "------------------------------------"

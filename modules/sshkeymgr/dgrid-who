@@ -1,0 +1,31 @@
+#!/bin/bash
+
+################## dgrid header1 ################ 
+if [ x$ORIGDIR == x ]; then
+export ORIGDIR=`pwd`
+fi
+
+_file0=`readlink -f $0`
+cd `dirname $_file0`
+
+. ./libdgrid.sh
+
+################## [END] dgrid header1 ################ 
+
+main_exit_if_not_enabled sshkeymgr
+
+sshkeymgr_load_agent_vars
+sshkeymgr_status
+
+echo MODINFO_modpath_sshkeymgr=$MODINFO_modpath_sshkeymgr
+
+#echo "-------- Current ssh-agent ---"
+#( set -o posix ; set )|grep "^SSH_"
+#echo "------------------------------"
+
+
+echo "------------------------------"
+echo zg_fuser $SSH_AUTH_SOCK
+zg_fuser_q $SSH_AUTH_SOCK
+
+ssh-add -l

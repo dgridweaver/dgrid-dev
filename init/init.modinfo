@@ -1,0 +1,8 @@
+# this module is special and MUST BE in dgrid/init/ directory
+name="init"
+description="initialize new empty/null grid node from config/url/..."
+group=base
+core="1.x"
+version="1.x-0.2"
+distribution_mode="1"
+

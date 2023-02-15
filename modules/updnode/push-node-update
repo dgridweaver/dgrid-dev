@@ -1,0 +1,39 @@
+#!/bin/bash
+
+
+################## dgrid header1 ################ 
+if [ x$ORIGDIR == x ]; then
+export ORIGDIR=`pwd`
+fi
+
+_file0=`readlink -f $0`
+cd `dirname $_file0`
+
+. ./libdgrid.sh
+
+################## [END] dgrid header1 ################ 
+
+main_exit_if_not_enabled updnode
+
+if [ "x$1" == x ]; then
+echo "push-node-update [nodeid]"
+echo "    [nodeid] - node id to push cfg&dist dgrid updates"
+
+exit
+fi
+nodeid=$1
+
+echo 
+echo "                  << updinst01 CLI util   >>"
+echo 
+#cfgstack_cfg trace UNKNOWN "/etc/updnode.conf" $THIS_NODEID
+cfgstack_cfg_op "/etc/updnode.conf" $THIS_NODEID op=trace
+
+
+
+
+updnode_showcfg
+echo ===
+updnode_push_node_update $nodeid
+
+#export MODINFO_dbg_updnode=4

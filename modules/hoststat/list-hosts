@@ -1,0 +1,19 @@
+#!/bin/bash
+
+################## dgrid header1 ################ 
+if [ x$ORIGDIR == x ]; then
+export ORIGDIR=`pwd`
+fi
+
+_file0=`readlink -f $0`
+cd `dirname $_file0`
+
+. ./libdgrid.sh
+
+################## [END] dgrid header1 ################ 
+
+#source ${_dir0}/lib.sh
+main_exit_if_not_enabled hoststat
+
+hoststat_listhosts_printnormal
+

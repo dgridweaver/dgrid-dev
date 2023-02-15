@@ -1,0 +1,12 @@
+Deltagrid
+=========
+
+Deltagrid (dgrid for short) is an attempt to create an open-source software 
+for provisioning, configuration management, and application-deployment 
+in diverse android + single board computers + server linux environment 
+focused primary on custom/experimental installations. 
+
+Install
+=======
+
+

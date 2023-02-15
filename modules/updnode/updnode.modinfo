@@ -1,0 +1,8 @@
+name="updnode"
+description="upd scripts for grid, simple"
+group="contrib"
+core="1.x"
+version="1.x-0.2"
+# soft-depended on "run"
+depend="hoststat, bashengine"
+

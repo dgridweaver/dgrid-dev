@@ -1,0 +1,23 @@
+#!/bin/bash
+
+
+imgpack_cmdrun mkdir -p ${imgpack_unpack_workdir}/${imgpack_id_name}
+_s=${imgpack_unpack_workdir}/${imgpack_id_name}
+
+echo "unpack ${imgpack_src_iso} ==> ${_s}"
+
+echo cd ${_s}
+cd ${_s}
+
+if [ "x$imgpack_type" == "xiso_repack" ]; then
+echo -n
+else
+echo "imgpack_type not defined"
+exit
+fi
+
+echo "7z x ${imgpack_src_iso}"
+imgpack_cmdrun 7z x ${imgpack_src_iso}
+
+
+

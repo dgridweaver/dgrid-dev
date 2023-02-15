@@ -1,0 +1,7 @@
+#!/bin/bash
+
+echo "================ univ/cfg ==================="
+
+( set -o posix ; set )| grep ^imgpack_
+
+

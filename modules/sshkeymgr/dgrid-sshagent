@@ -1,0 +1,37 @@
+#!/bin/bash
+
+################## dgrid header1 ################ 
+if [ x$ORIGDIR == x ]; then
+export ORIGDIR=`pwd`
+fi
+
+_file0=`readlink -f $0`
+cd `dirname $_file0`
+
+. ./libdgrid.sh
+
+################## [END] dgrid header1 ################ 
+
+main_exit_if_not_enabled sshkeymgr
+
+# DGRID_dir_dotlocal DGRID_dir_dotconfig DGRID_dir_dotcache DGRID_dir_nodelocal
+
+echo "start DGRID_dgridname=$DGRID_dgridname"
+
+#DGRID_GRIDNAME
+#export PARAMDIR="$HOME/.dgrid/$DGRID_GRIDNAME/sshkeymgr/"
+
+echo "------------ current ------------"
+( set -o posix ; set )|grep "^SSH_"
+( set -o posix ; set )|grep "^sshkeymgr"
+echo "---------------------------------"
+#exit
+#mkdir -p $PARAMDIR
+#mkdir -p ${PARAMDIR}/sess
+#SESSNAME="$USER@$HOSTNAME"
+
+
+#eval `sshkeymgr_load_agent_vars`
+
+# 
+sshkeymgr_start_sshagent

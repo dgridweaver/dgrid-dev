@@ -1,0 +1,32 @@
+
+
+imgpack subdirectories
+--------------
+
+./[xxx] - mostly drivers, i.e repack types in subdirs of this module.
+./univ - dir with universal commands, such as cfg.
+./iso_repack - repack iso's by just overriding specific files.
+./templates - src for imgpack_config_template="xxx". config templates with default values.
+
+# planned/ideas
+##./runtime_repack - 
+##./tarball_repack
+
+
+Standard commands
+-----------------
+
+download
+uncomress - unzip/ungriz/unbzip
+unpack - from tarball to directory
+patch - 
+pack
+compress
+output - copy to repository / artefact storage
+
+std/default sequence
+------------
+
+download ; uncomress ; unpack; patch; pack;
+
+

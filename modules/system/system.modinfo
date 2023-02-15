@@ -1,0 +1,6 @@
+name="system"
+description="system like things"
+group=core
+depend=bashengine
+core="1.x"
+version="1.x-0.3"

@@ -1,0 +1,44 @@
+#!/bin/bash
+
+export DGRID_mode_distrubution_enable=1
+
+################## dgrid header1 ################ 
+if [ x$ORIGDIR == x ]; then
+export ORIGDIR=`pwd`
+fi
+
+_file0=`readlink -f $0`
+_dir0=`dirname $_file0`
+cd ${_dir0}
+
+. ./libdgrid.sh
+################## [END] dgrid header1 ################ 
+
+# devel debug utility, just in case...
+
+distr_cmd_less()
+{
+echo -n
+if command -v less; then
+less
+else
+cat
+fi
+}
+
+
+distr_vars_simple()
+{
+set|grep ^DGRID
+set|grep ^GRID
+set|grep ^MODINFO_
+set|grep ^MODULE_
+set|grep ^mods_
+}
+
+echo
+echo "#########"
+echo
+distr_vars_simple|distr_cmd_less
+echo
+

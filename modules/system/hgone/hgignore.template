@@ -1,0 +1,11 @@
+syntax: glob
+*~
+
+syntax: regexp 
+^logs
+^not-in-vcs
+^bystars/this-install.conf(.*)
+^dgrid-site/etc/this-install.conf
+
+syntax: regexp 
+^dynamicdata(.*)

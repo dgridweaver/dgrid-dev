@@ -1,0 +1,7 @@
+#!/bin/bash
+
+system_dgrid_repo_type=hgone
+
+system_dgrid_sample_node_dir="dgrid-site/etc/sample-node"
+system_dgrid_sample_host_dir="dgrid-site/etc/sample-host"
+system_dgrid_sample_mainetc_dir="dgrid-site/etc/sample-dgrid-etc"

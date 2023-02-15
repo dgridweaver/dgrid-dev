@@ -1,0 +1,4 @@
+
+        check process apache with pidfile /var/run/httpd.pid
+              if failed port 80 then alert
+

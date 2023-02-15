@@ -1,0 +1,32 @@
+#!/bin/bash
+
+
+################## dgrid header1 ################ 
+if [ x$ORIGDIR == x ]; then
+export ORIGDIR=`pwd`
+fi
+
+#_file0=`readlink -f $0`
+#_dir0=`dirname $_file0`
+#cd ${_dir0}
+
+# DO NOT DEREFERENCE SYMBOLIC LINKS FOR GW
+#_file0=`readlink -f $0`
+_dir0=`dirname $0`
+cd ${_dir0}
+
+
+#export MODINFO_dbg_nodecfg=15
+#export MODINFO_dbg_this=15
+##export MODINFO_dbg_cache=15
+##export MODINFO_dbg_loadconfigs=15
+#export MODINFO_dbg_loadconfigs=14
+
+. ./libdgrid.sh
+
+################## [END] dgrid header1 ################ 
+
+main_exit_if_not_enabled dgridsys
+
+#export MODINFO_dbg_dgridsys=4
+dgridsys_cli_main "$*"

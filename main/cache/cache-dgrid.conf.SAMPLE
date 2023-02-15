@@ -1,0 +1,5 @@
+#CACHE_TYPES="ALL devshm dotcache not-in-vcs NONE"
+#CACHE_TYPES="NONE"
+#CACHE_TYPES="dotcache devshm"
+CACHE_TYPES="devshm dotcache"
+

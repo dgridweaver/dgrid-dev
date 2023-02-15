@@ -1,0 +1,30 @@
+#!/bin/bash
+
+if [ "x$imgpack_type" == "xiso_repack" ]; then
+echo -n
+else
+echo "imgpack_type not defined"
+exit
+fi
+
+#mkdir -p ${imgpack_unpack_workdir}/${imgpack_id_name}
+_s=${imgpack_unpack_workdir}/${imgpack_id_name}
+
+_out=${imgpack_unpack_workdir}/${imgpack_id_name}_out.iso
+echo "pack ${_s}"
+echo "out=${_out}"
+
+#echo cd ${_s}
+#cd ${_s}
+cd $imgpack_this_cfgdir
+#cat files
+pushd ./imgroot > /dev/null
+echo --------------- imgroot files to override: --------------- 
+ls -R ./
+
+echo ---------------                            --------------- 
+set -x
+cp -avR ./ ${_s}/
+set +x
+popd > /dev/null
+

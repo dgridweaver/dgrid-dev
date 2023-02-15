@@ -1,0 +1,7 @@
+# this module is special and MUST BE in dgrid/ directory
+name="initgrid"
+description="initialize new grid from dgrid distribution"
+group=core
+core="1.x"
+version="1.x-0.3"
+distribution_mode="1"

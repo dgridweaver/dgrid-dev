@@ -1,0 +1,41 @@
+#!/bin/bash
+
+################## dgrid header1 ################ 
+if [ x$ORIGDIR == x ]; then
+export ORIGDIR=`pwd`
+fi
+
+_file0=`readlink -f $0`
+_dir0=`dirname $_file0`
+cd ${_dir0}
+
+. ./libdgrid.sh
+################## [END] dgrid header1 ################ 
+
+# devel debug utility, just in case...
+
+
+#main_envset_poststart_hook
+#main_envset_start_hook
+
+#echo "----------------------"
+devhelper_call_hook_print envset_prestart
+echo
+#echo "----------------------"
+devhelper_call_hook_print env_prestart
+echo
+#echo "----------------------"
+devhelper_call_hook_print envset_prestart2
+echo
+#echo "----------------------"
+devhelper_call_hook_print env_prestart2
+echo
+#echo "----------------------"
+devhelper_call_hook_print envset_start
+echo
+#echo "----------------------"
+devhelper_call_hook_print env_start
+echo
+#echo "----------------------"
+devhelper_call_hook_print env_poststart
+echo

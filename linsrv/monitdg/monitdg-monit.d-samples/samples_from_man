@@ -1,0 +1,359 @@
+        start="/bin/bash -c ’echo $$ > pidfile; exec program’"
+        stop="/bin/bash -c ’kill -s SIGTERM ‘cat pidfile‘’"
+
+
+
+        check process resin with pidfile /usr/local/resin/srun.pid
+              start program = "/usr/local/resin/bin/srun.sh start"
+
+
+        check process apache with pidfile /var/run/httpd.pid
+              start program = "/etc/init.d/httpd start" with timeout 60 seconds
+              stop program  = "/etc/init.d/httpd stop"
+              if failed port 80 then restart
+              if failed port 443 with timeout 15 seconds then restart
+
+
+
+        check process tomcat with pidfile /var/run/tomcat.pid
+              start program = "/etc/init.d/tomcat start"
+                    as uid nobody and gid nobody
+              stop program  = "/etc/init.d/tomcat stop"
+                    # You can also use id numbers instead and write:
+                    as uid 99 and with gid 99
+              if failed port 8080 then alert
+
+       In this example we use udp for connection testing to check if the name-
+       server is running and also use timeout and alert:
+
+        check process named with pidfile /var/run/named.pid
+              start program = "/etc/init.d/named start"
+              stop program  = "/etc/init.d/named stop"
+              if failed port 53 use type udp protocol dns then restart
+              if 3 restarts within 5 cycles then timeout
+
+       The following example illustrates how to check if the service ’sophie’
+       is answering connections on its Unix domain socket:
+
+        check process sophie with pidfile /var/run/sophie.pid
+              start program = "/etc/init.d/sophie start"
+              stop  program = "/etc/init.d/sophie stop"
+              if failed unix /var/run/sophie then restart
+
+       In this example we check an apache web-server running on localhost that
+       answers for several IP-based virtual hosts or vhosts, hence the host
+       statement before port:
+
+        check process apache with pidfile /var/run/httpd.pid
+              start "/etc/init.d/httpd start"
+              stop  "/etc/init.d/httpd stop"
+              if failed host www.sol.no port 80 then alert
+              if failed host shop.sol.no port 443 then alert
+              if failed host chat.sol.no port 80 then alert
+              if failed host www.tildeslash.com port 80 then alert
+
+       To make sure that Monit is communicating with a http server a protocol
+       test can be added:
+
+        check process apache with pidfile /var/run/httpd.pid
+              start "/etc/init.d/httpd start"
+              stop  "/etc/init.d/httpd stop"
+              if failed host www.sol.no port 80
+                 protocol HTTP
+                 then alert
+
+       This example shows a different way to check a webserver using the
+       send/expect mechanism:
+
+        check process apache with pidfile /var/run/httpd.pid
+              start "/etc/init.d/httpd start"
+              stop  "/etc/init.d/httpd stop"
+              if failed host www.sol.no port 80
+                 send "GET / HTTP/1.0\r\nHost: www.sol.no\r\n\r\n"
+                 expect "HTTP/[0-9\.]{3} 200 .*\r\n"
+                 then alert
+
+       To make sure that Apache is logging successfully (i.e. no more than 60
+       percent of child servers are logging), use its mod_status page at
+       www.sol.no/server-status with this special protocol test:
+
+        check process apache with pidfile /var/run/httpd.pid
+              start "/etc/init.d/httpd start"
+              stop  "/etc/init.d/httpd stop"
+              if failed host www.sol.no port 80
+              protocol apache-status loglimit > 60% then restart
+
+       This configuration can be used to alert you if 25 percent or more of
+       Apache child processes are stuck performing DNS lookups:
+
+        check process apache with pidfile /var/run/httpd.pid
+              start "/etc/init.d/httpd start"
+              stop  "/etc/init.d/httpd stop"
+              if failed host www.sol.no port 80
+              protocol apache-status dnslimit > 25% then alert
+
+       Here we use an icmp ping test to check if a remote host is up and if
+       not send an alert:
+
+        check host www.tildeslash.com with address www.tildeslash.com
+              if failed icmp type echo count 5 with timeout 15 seconds
+                 then alert
+
+       In the following example we ask Monit to compute and verify the check-
+       sum for the underlying apache binary used by the start and stop pro-
+       grams. If the the checksum test should fail, monitoring will be dis-
+       abled to prevent possibly starting a compromised binary:
+
+        check process apache with pidfile /var/run/httpd.pid
+              start program = "/etc/init.d/httpd start"
+              stop program  = "/etc/init.d/httpd stop"
+              if failed host www.tildeslash.com port 80 then restart
+              depends on apache_bin
+
+        check file apache_bin with path /usr/local/apache/bin/httpd
+              if failed checksum then unmonitor
+
+       In this example we ask Monit to test the checksum for a document on a
+       remote server. If the checksum was changed we send an alert:
+
+        check host tildeslash with address www.tildeslash.com
+              if failed port 80 protocol http
+                 and request "/monit/dist/monit-4.0.tar.gz"
+                     with checksum f9d26b8393736b5dfad837bb13780786
+              then alert
+
+       Here are a couple of tests for some popular communication servers,
+       using the SIP protocol. First we test a FreeSWITCH server and then an
+       Asterisk server
+
+        check process freeswitch
+           with pidfile /usr/local/freeswitch/log/freeswitch.pid
+         start program = “/usr/local/freeswitch/bin/freeswitch -nc -hp”
+         stop program = “/usr/local/freeswitch/bin/freeswitch -stop”
+         if totalmem > 1000.0 MB for 5 cycles then alert
+         if totalmem > 1500.0 MB for 5 cycles then alert
+         if totalmem > 2000.0 MB for 5 cycles then restart
+         if cpu > 60% for 5 cycles then alert
+         if failed port 5060 type udp protocol SIP
+            target me@foo.bar and maxforward 10
+         then restart
+         if 5 restarts within 5 cycles then timeout
+
+        check process asterisk
+          with pidfile /var/run/asterisk/asterisk.pid
+          start program = “/usr/sbin/asterisk”
+          stop program = “/usr/sbin/asterisk -r -x ’shutdown now’”
+          if totalmem > 1000.0 MB for 5 cycles then alert
+          if totalmem > 1500.0 MB for 5 cycles then alert
+          if totalmem > 2000.0 MB for 5 cycles then restart
+          if cpu > 60% for 5 cycles then alert
+          if failed port 5060 type udp protocol SIP
+            and target me@foo.bar maxforward 10
+          then restart
+          if 5 restarts within 5 cycles then timeout
+
+       Some servers are slow starters, like for example Java based Application
+       Servers. So if we want to keep the poll-cycle low (i.e. < 60 seconds)
+       but allow some services to take its time to start, the eevveerryy statement
+       is handy:
+
+        check process dynamo with pidfile /etc/dynamo.pid
+              start program = "/etc/init.d/dynamo start"
+              stop program  = "/etc/init.d/dynamo stop"
+              if failed port 8840 then alert
+              every 2 cycles
+
+       Here is an example where we group together two database entries so you
+       can manage them together, e.g.; ’Monit -g database start all’. The mode
+       statement is also illustrated in the first entry and have the effect
+       that Monit will not try to (re)start this service if it is not running:
+
+        check process sybase with pidfile /var/run/sybase.pid
+              start = "/etc/init.d/sybase start"
+              stop  = "/etc/init.d/sybase stop"
+              mode passive
+              group database
+
+        check process oracle with pidfile /var/run/oracle.pid
+              start program = "/etc/init.d/oracle start"
+              stop program  = "/etc/init.d/oracle stop"
+              mode active # Not necessary really, since it’s the default
+              if failed port 9001 then restart
+              group database
+
+       Here is an example to show the usage of the resource checks. It will
+       send an alert when the CPU usage of the http daemon and its child pro-
+       cesses raises beyond 60% for over two cycles. Apache is restarted if
+       the CPU usage is over 80% for five cycles or the memory usage over
+       100Mb for five cycles or if the machines load average is more than 10
+       for 8 cycles:
+
+        check process apache with pidfile /var/run/httpd.pid
+              start program = "/etc/init.d/httpd start"
+              stop program  = "/etc/init.d/httpd stop"
+              if cpu > 40% for 2 cycles then alert
+              if totalcpu > 60% for 2 cycles then alert
+              if totalcpu > 80% for 5 cycles then restart
+              if mem > 100 MB for 5 cycles then stop
+              if loadavg(5min) greater than 10.0 for 8 cycles then stop
+
+       This examples demonstrate the timestamp statement with exec and how you
+       may restart apache if its configuration file was changed.
+
+        check file httpd.conf with path /etc/httpd/httpd.conf
+              if changed timestamp
+                 then exec "/etc/init.d/httpd graceful"
+
+       In this example we demonstrate usage of the extended alert statement
+       and a file check dependency:
+
+        check process apache with pidfile /var/run/httpd.pid
+             start = "/etc/init.d/httpd start"
+             stop  = "/etc/init.d/httpd stop"
+             alert admin@bar on {nonexist, timeout}
+               with mail-format {
+                     from:     bofh@$HOST
+                     subject:  apache $EVENT - $ACTION
+                     message:  This event occurred on $HOST at $DATE.
+                     Your faithful employee,
+                     monit
+             }
+             if failed host www.tildeslash.com  port 80 then restart
+             if 3 restarts within 5 cycles then timeout
+             depend httpd_bin
+             group apache
+
+        check file httpd_bin with path /usr/local/apache/bin/httpd
+              alert security@bar on {checksum, timestamp,
+                         permission, uid, gid}
+                    with mail-format {subject: Alaaarrm! on $HOST}
+              if failed checksum
+                 and expect 8f7f419955cefa0b33a2ba316cba3659
+                     then unmonitor
+              if failed permission 755 then unmonitor
+              if failed uid root then unmonitor
+              if failed gid root then unmonitor
+              if changed timestamp then alert
+              group apache
+
+       In this example, we demonstrate usage of the depend statement. In this
+       case, we want to start oracle and apache. However, we’ve set up apache
+       to use oracle as a back end, and if oracle is restarted, apache must be
+       restarted as well.
+
+        check process apache with pidfile /var/run/httpd.pid
+              start = "/etc/init.d/httpd start"
+              stop  = "/etc/init.d/httpd stop"
+              depends on oracle
+
+        check process oracle with pidfile /var/run/oracle.pid
+              start = "/etc/init.d/oracle start"
+              stop  = "/etc/init.d/oracle stop"
+              if failed port 9001 then restart
+
+       Next, we have 2 services, oracle-import and oracle-export that need to
+       be restarted if oracle is restarted, but are independent of each other.
+
+        check process oracle with pidfile /var/run/oracle.pid
+              start = "/etc/init.d/oracle start"
+              stop  = "/etc/init.d/oracle stop"
+              if failed port 9001 then restart
+
+        check process oracle-import
+             with pidfile /var/run/oracle-import.pid
+              start = "/etc/init.d/oracle-import start"
+              stop  = "/etc/init.d/oracle-import stop"
+              depends on oracle
+
+        check process oracle-export
+             with pidfile /var/run/oracle-export.pid
+              start = "/etc/init.d/oracle-export start"
+              stop  = "/etc/init.d/oracle-export stop"
+              depends on oracle
+
+       Finally an example with all statements:
+
+        check process apache with pidfile /var/run/httpd.pid
+              start program = "/etc/init.d/httpd start"
+              stop program  = "/etc/init.d/httpd stop"
+              if 3 restarts within 5 cycles then timeout
+              if failed host www.sol.no  port 80 protocol http
+                 and use the request "/login.cgi"
+                     then alert
+              if failed host shop.sol.no port 443 type tcpssl
+                 protocol http and with timeout 15 seconds
+                     then restart
+              if cpu is greater than 60% for 2 cycles then alert
+              if cpu > 80% for 5 cycles then restart
+              if totalmem > 100 MB then stop
+              if children > 200 then alert
+              alert bofh@bar with mail-format {from: monit@foo.bar.no}
+              every 2 cycles
+              mode active
+              depends on weblogic
+              depends on httpd.pid
+              depends on httpd.conf
+              depends on httpd_bin
+              depends on datafs
+              group server
+
+        check file httpd.pid with path /usr/local/apache/logs/httpd.pid
+              group server
+              if timestamp > 7 days then restart
+              every 2 cycles
+              alert bofh@bar with mail-format {from: monit@foo.bar.no}
+              depends on datafs
+
+        check file httpd.conf with path /etc/httpd/httpd.conf
+              group server
+              if timestamp was changed
+                 then exec "/usr/local/apache/bin/apachectl graceful"
+              every 2 cycles
+              alert bofh@bar with mail-format {from: monit@foo.bar.no}
+              depends on datafs
+
+        check file httpd_bin with path /usr/local/apache/bin/httpd
+              group server
+              if failed checksum and expect the sum
+                 8f7f419955cefa0b33a2ba316cba3659 then unmonitor
+              if failed permission 755 then unmonitor
+              if failed uid root then unmonitor
+              if failed gid root then unmonitor
+              if changed size then alert
+              if changed timestamp then alert
+              every 2 cycles
+              alert bofh@bar with mail-format {from: monit@foo.bar.no}
+              alert foo@bar on { checksum, size, timestamp, uid, gid }
+              depends on datafs
+
+        check filesystem datafs with path /dev/sdb1
+              group server
+              start program  = "/bin/mount /data"
+              stop program  =  "/bin/umount /data"
+              if failed permission 660 then unmonitor
+              if failed uid root then unmonitor
+              if failed gid disk then unmonitor
+              if space usage > 80 % then alert
+              if space usage > 94 % then stop
+              if inode usage > 80 % then alert
+              if inode usage > 94 % then stop
+              alert root@localhost
+
+        check host ftp.redhat.com with address ftp.redhat.com
+              if failed icmp type echo with timeout 15 seconds
+                 then alert
+              if failed port 21 protocol ftp
+                 then exec "/usr/X11R6/bin/xmessage -display
+                            :0 ftp connection failed"
+              alert foo@bar.com
+
+        check host www.gnu.org with address www.gnu.org
+              if failed port 80 protocol http
+                 and request "/pub/gnu/bash/bash-2.05b.tar.gz"
+                     with checksum 8f7f419955cefa0b33a2ba316cba3659
+              then alert
+              alert rms@gnu.org with mail-format {
+                   subject: The gnu server may be hacked again! }
+
+       Note; only the cchheecckk ssttaatteemmeenntt is mandatory, the other statements are
+       optional and the order of the optional statements is not important.

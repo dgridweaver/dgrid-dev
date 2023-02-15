@@ -1,0 +1,25 @@
+
+README for libdgrid
+===================
+
+Files  header.sh and libdgrid.sh is a shell library
+for including in modules that whant to use CLI utils in their own
+module dir.
+
+Lets assume that you  have module "firstmod". So you have files
+
+$YOU_DIR/firstmod/firstmod.modinfio
+$YOU_DIR/firstmod/firstmod.bash
+
+If you want to create firstmod-cli , do this
+
+rm $YOU_DIR/firstmod/firstmod-cli
+touch $YOU_DIR/firstmod/firstmod-cli
+cat header.sh >> $YOU_DIR/firstmod/firstmod-cli
+cat libdgrid.sh > $YOU_DIR/firstmod/libdgrid.sh
+
+Then add you own code.
+
+
+
+

@@ -1,0 +1,26 @@
+#!/bin/bash
+
+################## dgrid header1 ################ 
+if [ x$ORIGDIR == x ]; then
+export ORIGDIR=`pwd`
+fi
+
+_file0=`readlink -f $0`
+_dir0=`dirname $_file0`
+cd ${_dir0}
+
+. ./libdgrid.sh
+################## [END] dgrid header1 ################ 
+echo "----------- TEST 1 -------------"
+#export MODINFO_msg_system=10
+#export MODINFO_dbg_system=6
+
+
+system_f_cleanenv  ./dgrid/modules/dgridsys/dgridsys module list
+exit
+# if needed
+echo "----------- TEST 2 -------------"
+echo "./dgrid/modules/system/system-runcleanenv "
+echo "      ./dgrid/modules/dgridsys/dgridsys module list"
+./dgrid/modules/system/system-runcleanenv \
+  ./dgrid/modules/dgridsys/dgridsys module list

@@ -1,0 +1,6 @@
+# defaults
+
+imgpack_iso_isohybrid=1
+imgpack_iso_implantisomd5=1
+
+imgpack_iso_unpack="7z"

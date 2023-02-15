@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ "x$imgpack_type" == "xiso_repack" ]; then
+echo -n
+else
+echo "imgpack_type not defined"
+exit
+fi
+
+cd $imgpack_this_cfgdir
+
+# ----------------------------------------------------------------
+set -x
+
+cat ./files/isolinux.cfg_d/isolinux* > ./imgroot/isolinux/isolinux.cfg
+ 
+

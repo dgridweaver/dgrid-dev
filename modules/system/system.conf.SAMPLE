@@ -1,0 +1,8 @@
+
+system_dgrid_repo_type=hgone
+
+#system_dgrid_sample_node_dir="bynodes/sample"
+system_dgrid_sample_node_dir="bynodes/samplenode"
+system_dgrid_sample_host_dir="bynodes/samplehost"
+
+#system_update_override_module=

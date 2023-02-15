@@ -1,0 +1,15 @@
+#!/bin/sh
+
+echo "============= check ==============="
+
+imgpack_check_dir_path() { if [ -d $1 ]; then echo "OK[dir]: $1"; else echo "ERROR: $1"; fi }
+imgpack_check_file_path() { if [ -a $1 ]; then echo "OK[file]: $1";else echo "ERROR: $1";  fi }
+
+#imgpack_check_file_path ${imgpack_src_iso}
+#imgpack_check_dir_path ${imgpack_}
+
+echo "pwd="`pwd`
+
+imgpack_check_file_path $imgpack_src_iso
+imgpack_check_dir_path $imgpack_unpack_workdir
+

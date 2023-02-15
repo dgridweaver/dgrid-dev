@@ -1,0 +1,6 @@
+name="sshzg"
+description="ssh - dgrid integration, ssh wrapper"
+group=addons
+depend=bashengine
+core="1.x"
+version="1.x-0.1"

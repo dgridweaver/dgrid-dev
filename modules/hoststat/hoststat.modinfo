@@ -1,0 +1,6 @@
+name="hoststat"
+description="state of hosts: up/down, ... *important*"
+group=base
+depend="bashengine"
+core="1.x"
+version="1.x-0.1"

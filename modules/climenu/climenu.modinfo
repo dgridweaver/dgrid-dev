@@ -1,0 +1,5 @@
+name="climenu"
+description="use mc + files as menu"
+group=addons
+depend=bashengine
+version="1.x-0.3"

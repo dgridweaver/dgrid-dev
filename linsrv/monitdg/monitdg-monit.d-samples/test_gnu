@@ -1,0 +1,4 @@
+check host www.gnu.org with address www.gnu.org
+              if failed port 80 protocol http
+              then alert
+

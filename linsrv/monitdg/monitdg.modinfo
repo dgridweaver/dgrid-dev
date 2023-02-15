@@ -1,0 +1,5 @@
+name="monitdg"
+description="monit integration to dgrid"
+group=addons
+depend=bashengine
+version="0.x-0.6"

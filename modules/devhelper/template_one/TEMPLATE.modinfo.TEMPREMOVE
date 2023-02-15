@@ -1,0 +1,5 @@
+name="TEMPLATE"
+description="created from template by devhelper"
+group=addons
+depend=bashengine
+version="0.x-0.1"
