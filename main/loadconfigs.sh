@@ -13,7 +13,10 @@ export DGRID_f_allow_no_thisnode=0
 if [ -f "./dgrid-site/etc/dgrid.conf" ]; then
 echo -n
 else
- if [ -a "./main/loadconfigs1.sh" -a "x$DGRID_mode_distrubution_enable" == x1 ]; then
+ if [ -f "./main/loadconfigs1.sh" -a -f "../dgrid-site/etc/dgrid.conf" ]; then
+  # we are in dgrid/ dir but node looks active. need better test for future.
+  cd ../
+ elif [ -a "./main/loadconfigs1.sh" -a "x$DGRID_mode_distrubution_enable" == x1 ]; then
   # load dgrid in distribution mode
   # set flags 
   export DGRID_f_distribution=1

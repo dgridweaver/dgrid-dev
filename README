@@ -3,10 +3,17 @@ Deltagrid
 
 Deltagrid (dgrid for short) is an attempt to create an open-source software 
 for provisioning, configuration management, and application-deployment 
-in diverse android + single board computers + server linux environment 
+in diverse android + SBC (single board computers) + server linux environments 
 focused primary on custom/experimental installations. 
 
 Install
 =======
 
+See INSTALL file.
 
+TLDR
+=======
+dgrid as system functions as a group of dgrid software installations called 
+nodes. Node can be installed on any compatible host, multiple nodes can
+be installed under same user. Node communicate between themselves using 
+ssh (mostly).

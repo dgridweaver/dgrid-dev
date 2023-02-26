@@ -3,5 +3,5 @@ name="initgrid"
 description="initialize new grid from dgrid distribution"
 group=core
 core="1.x"
-version="1.x-0.3"
+version="1.x-0.6"
 distribution_mode="1"

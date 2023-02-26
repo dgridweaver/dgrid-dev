@@ -11,25 +11,27 @@ fi
 initgrid_install_dgridbase_copy() {
   pushd $dgridpath/$dgridname >/dev/null
   initgrid_echo DGRIDDISTDIR=$DGRIDDISTDIR
-  initgrid_echo cp -aR $DGRIDDISTDIR ./
-  cp -aR $DGRIDDISTDIR ./
+  initgrid_echo cp -aR $DGRIDDISTDIR ./dgrid
+  cp -aR $DGRIDDISTDIR ./dgrid
   popd >/dev/null
 }
 
 initgrid_install_dgridbase_hg2hg() {
   initgrid_hg_paths_default=$(initgrid_hg_get_uplink_repo)
-  initgrid_hg_our_dgrid_path=$(initgrid_get_our_dgrid_path)
+  initgrid_hg_our_dgrid_path=$(initgrid_get_our_dgrid_path_hg)
 
   if [ -z "$initgrid_hg_our_dgrid_path" ]; then
-    initgrid_echo "initgrid_hg_our_dgrid_path == \"\" empty, aborting"
+    initgrid_echo "initgrid_hg_our_dgrid_path == \"\" empty, aborting  (no hg found)"
     exit
   fi
   if [ -z "$initgrid_hg_paths_default" ]; then
     initgrid_echo "initgrid_hg_paths_default == \"\" empty"
   else
-    initgrid_echo "Use uplink initgrid_hg_paths_default as initgrid_hg_our_dgrid_path"
-    initgrid_echo "initgrid_hg_our_dgrid_path=$initgrid_hg_paths_default"
-    initgrid_hg_our_dgrid_path=$initgrid_hg_paths_default
+    if [ x$installvar_clone_from_uplink == "x1" ]; then
+      initgrid_echo "Use uplink initgrid_hg_paths_default as initgrid_hg_our_dgrid_path"
+      initgrid_echo "initgrid_hg_our_dgrid_path=$initgrid_hg_paths_default"
+      initgrid_hg_our_dgrid_path=$initgrid_hg_paths_default
+    fi
   fi
 
   pushd $dgridpath/$dgridname >/dev/null
@@ -37,6 +39,33 @@ initgrid_install_dgridbase_hg2hg() {
   initgrid_echo -n pwd=$(pwd)
   initgrid_echo hg clone $initgrid_hg_our_dgrid_path dgrid
   hg clone $initgrid_hg_our_dgrid_path dgrid | initgrid_save_to_log
+  initgrid_echo -n
+  popd >/dev/null
+}
+
+initgrid_install_dgridbase_git2hg() {
+  initgrid_git_paths_default=$(initgrid_git_get_uplink_repo)
+  initgrid_our_dgrid_path=$(initgrid_get_our_dgrid_path_git)
+
+  if [ -z "$initgrid_our_dgrid_path" ]; then
+    initgrid_echo "initgrid_our_dgrid_path == \"\" empty (no git found), aborting"
+    exit
+  fi
+  if [ -z "$initgrid_git_paths_default" ]; then
+    initgrid_echo "initgrid_git_paths_default == \"\" empty"
+  else
+    if [ x$installvar_clone_from_uplink == "x1" ]; then
+      initgrid_echo "Use uplink initgrid_git_paths_default as initgrid_git_our_dgrid_path"
+      initgrid_echo "initgrid_hg_our_dgrid_path=$initgrid_git_paths_default"
+      initgrid_git_our_dgrid_path=$initgrid_git_paths_default
+    fi
+  fi
+
+  pushd $dgridpath/$dgridname >/dev/null
+  initgrid_echo -n pwd=$(pwd)
+  initgrid_echo git clone $initgrid_hg_our_dgrid_path dgrid
+  # use hg git extention, if not we fail
+  hg clone $initgrid_our_dgrid_path dgrid | initgrid_save_to_log
   initgrid_echo -n
   popd >/dev/null
 }
@@ -58,9 +87,17 @@ install_dgridbase_src_type_GET() {
   popd >/dev/null
 }
 
-initgrid_get_our_dgrid_path() {
+initgrid_get_our_dgrid_path_hg() {
   pushd $initgrid_BASEDIR_DGRID >/dev/null
   if [ -f ./.hg/store/00manifest.i ]; then
+    echo $initgrid_BASEDIR_DGRID
+  fi
+  popd >/dev/null
+}
+
+initgrid_get_our_dgrid_path_git() {
+  pushd $initgrid_BASEDIR_DGRID >/dev/null
+  if [ -f ./.git/index -a -f ./.git/packed-refs ]; then
     echo $initgrid_BASEDIR_DGRID
   fi
   popd >/dev/null
@@ -127,10 +164,10 @@ initgrid_save_install_params() {
     set -o posix
     set
   ) | grep ^install_ >>${out}
-#  (
-#    set -o posix
-#    set
-#  ) | grep ^initgrid_ >>${out}
+    (
+      set -o posix
+      set
+    ) | grep ^MODINFO_dbg_ >>${out}
 }
 
 #######################################################
@@ -146,6 +183,14 @@ initgrid_hg_get_uplink_repo() {
   echo $initgrid_hg_paths_default
 }
 
+initgrid_git_get_uplink_repo() {
+  local var
+
+  var=$(git remote -v | grep \(fetch\)\$) 1>&2
+  var=$(echo $var | cut -d " " -f 2)
+  echo $var
+}
+
 #############################################################
 
 initgrid_dgridsys() {
@@ -155,8 +200,6 @@ initgrid_dgridsys() {
   #system_f_cleanenv ./dgrid/modules/dgridsys/dgridsys $*
   #dgridsys_cli_main $*
 }
-
-
 
 initgrid_timestamp() {
   date +%s
@@ -187,7 +230,7 @@ initgrid_installvar_exit() {
 }
 
 initgrid_parse_keyval_cli() {
-  local _p="" _v _c 
+  local _p="" _v _c
   for _p in $*; do
     _v=""
     _c=""
@@ -247,8 +290,10 @@ initgrid_2stage_run() {
   # add this node
   #nodecfg_add_this_node
   mkdir -p ./not-in-vcs/attach/
-  initgrid_dgridsys nodecfg addthis
-
+  #initgrid_dgridsys nodecfg addthis
+  dbg_echo initgrid 5 F "USER=$USER"
+  distr_nodecfg_addthis # callin directly, probably fix
+  
   _distr_mkdir ./bynodes/
   cp -v -r ./not-in-vcs/attach//thisnode/cfg/* ./bynodes/
 
@@ -263,11 +308,9 @@ initgrid_2stage_run() {
   #MODINFO_dbg_main=10
   # old way disabled
   #main_mod_runfunc 'run_mod_init $name $mod_dir stage3'
-  
+
   hgone_register_all_changes $(system_trans_genid)
 }
-
-
 
 ##########################################################################
 
@@ -275,41 +318,38 @@ initgrid_actual_do_install() {
   initgrid_echo "Begin actual_do_install()"
   cd $installvar_NEWDIR_DGRID
   initgrid_echo "actual_do_install() : ./dgrid/init/initgrid-structure $dgridname"
-  
+
   # exit:before-actual-do-install
   initgrid_installvar_exit before-actual-do-install
   #
-  # 
+  #
   initgrid_echo "pushd into target directory $dgridpath/$dgridname "
   initgrid_echo "init grid sys directories : distr__en_create_dirs"
 
   pushd $dgridpath/$dgridname >/dev/null
   distr__en_create_dirs
   #exit
-  echo "DGRID_dgridname=\"$dgridname\"" > ./dgrid-site/etc/dgrid.conf
-  popd > /dev/null
+  echo "DGRID_dgridname=\"$dgridname\"" >./dgrid-site/etc/dgrid.conf
+  popd >/dev/null
   initgrid_echo "echo DGRID_dgridname=\"$dgridname\" \> ./dgrid-site/etc/dgrid.conf"
   export RUN_FROM_init_dgrid_structure=y
 
   # copy log file
   initgrid_echo cp $DGRID_initgrid_log $installvar_NEWDIR_DGRID/not-in-vcs/initgrid_this/
   cp $DGRID_initgrid_log $installvar_NEWDIR_DGRID/not-in-vcs/initgrid_this/
-  
+
   # execute next stage of installations inside new empty node
   initgrid_echo "bash ./dgrid/init/initgrid-2nd-stage.bash"
   pushd $dgridpath/$dgridname >/dev/null
   distr_run_bash_clean RUN_FROM_init_dgrid_structure ./dgrid/init/initgrid-2nd-stage.bash
   #env -i RUN_FROM_init_dgrid_structure=y bash -l ./dgrid/init/initgrid-2nd-stage.bash
   exit
-  popd > /dev/null
+  popd >/dev/null
 
   initgrid_echo "End actual_do_install()"
 }
 
-
-
 #######################################################################
-
 
 initgrid_install_dgrid() {
   #export dgridname=$1
@@ -418,7 +458,12 @@ initgrid_install_dgrid() {
   initgrid_echo dgridpath=$dgridpath
   initgrid_echo
 
-  mkdir $dgridpath/$dgridname
+  if [ -a $dgridpath/$dgridname ]; then
+    initgrid_echo "ABORT, target dir $dgridpath/$dgridname already exists"
+    exit
+  else
+    mkdir $dgridpath/$dgridname
+  fi
 
   export installvar_NEWDIR_DGRID=$dgridpath/$dgridname
   export installvar_dgridname=$dgridname
@@ -430,14 +475,16 @@ initgrid_install_dgrid() {
   # install_dgrid_base_src_type_GET
   export install_dgridbase_src_type=$(install_dgridbase_src_type_GET)
 
+  initgrid_echo installvar_dgridbase_driver=$installvar_dgridbase_driver
   initgrid_echo install_dgridbase_src_type=$install_dgridbase_src_type [autodetect]
   initgrid_echo install_dgridbase_dst_type=$install_dgridbase_dst_type [config]
   initgrid_echo install_dgridbase_dst_createnew=$install_dgridbase_dst_createnew [config]
 
-  # exit:params-check
+  # exit:params-check. I.e we exit if cfg says that we exit after "params-check"
   initgrid_installvar_exit params-check
 
   ##
+  initgrid_echo "--------- Start calling install procedures  ------------"
 
   # just copy driver
   if [ x"$installvar_dgridbase_driver" == x"copy" ]; then
@@ -448,35 +495,67 @@ initgrid_install_dgrid() {
     exit
   fi
 
-  if [ x"$installvar_dgridbase_drive" == x"vcs1" ]; then
-    if [ x"$install_dgridbase_dst_createnew" == x0 ]; then
-      if [ x"$install_dgridbase_dst_type" == x"hg" ]; then
-        initgrid_echo "run install_dgrid_base_hg2hg"
-        initgrid_install_dgridbase_hg2hg
-        initgrid_save_install_params
-        initgrid_actual_do_install
-        exit
+  if [ x"$installvar_dgridbase_driver" == x"vcs1" ]; then
+    if [ x"$install_dgridbase_src_type" == x"hg" ]; then
+      initgrid_echo "--------- installvar_dgridbase_driver == vcs1, src_type = hg ------------"
+      if [ x"$install_dgridbase_dst_createnew" == x0 ]; then
+        if [ x"$install_dgridbase_dst_type" == x"hg" ]; then
+          initgrid_echo "run install_dgrid_base_hg2hg"
+          initgrid_install_dgridbase_hg2hg
+          initgrid_save_install_params
+          initgrid_actual_do_install
+          exit
+        fi
       fi
     fi
   fi
 
   #
 
-  if [ x"$installvar_dgridbase_drive" == x"vcs1" ]; then
-  if [ x"$install_dgridbase_dst_createnew" == x1 ]; then
-    dgridbase_export ${installvar_NEWDIR_DGRID}/dgrid
-    install_dgridbase_createnew
-    initgrid_save_install_params
+  if [ x"$installvar_dgridbase_driver" == x"vcs1" ]; then
+    if [ x"$install_dgridbase_src_type" == x"hg" ]; then
+      initgrid_echo "--------- installvar_dgridbase_driver == vcs1, src_type = hg ------------"
+      if [ x"$install_dgridbase_dst_createnew" == x1 ]; then
+        dgridbase_export ${installvar_NEWDIR_DGRID}/dgrid
+        install_dgridbase_createnew
+        initgrid_save_install_params
 
-    initgrid_actual_do_install
-    initgrid_echo
-    initgrid_echo
-  else
-    initgrid_echo " install_dgridbase_dst_createnew == 0 , but not found correct install procedure"
+        initgrid_actual_do_install
+        initgrid_echo
+        initgrid_echo
+        exit
+      else
+        initgrid_echo " install_dgridbase_dst_createnew == 0 , but not found correct install procedure"
+        exit
+      fi
+      exit
+    fi
   fi
+
+  ####### git src ##########
+
+  if [ x"$installvar_dgridbase_driver" == x"vcs1" ]; then
+    if [ x"$install_dgridbase_src_type" == x"git" ]; then
+      initgrid_echo "--------- installvar_dgridbase_driver == vcs1, src_type = git ------------"
+      if [ x"$install_dgridbase_dst_createnew" == x0 ]; then
+        initgrid_echo "--------- install_dgridbase_dst_createnew == 0 ------------"
+        if [ x"$install_dgridbase_dst_type" == x"hg" ]; then
+          initgrid_echo "run install_dgrid_base_git2hg"
+          initgrid_install_dgridbase_git2hg
+
+          initgrid_save_install_params
+          initgrid_actual_do_install
+          initgrid_echo
+          initgrid_echo
+          exit
+        fi
+      fi
+    fi
   fi
 
   initgrid_echo
+  initgrid_echo
+  initgrid_echo "Install method (installvar_dgridbase_drive == ?) not found,exiting"
   initgrid_echo
   exit
 }
