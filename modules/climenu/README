@@ -4,3 +4,13 @@ climenu
 Module to create "universal" scripts that call functions use it name as
 parameter.Script take name of itself as action and dir name as host(or 
 node, or something) name and call functions using this as parameters.
+
+API
+---
+Module will call 2 hooks:
+HOOK_climenu_cmds() 
+HOOK_climenu_cmd_CMD()
+When HOOK=module_name, CMD is a climenu command name
+i.e
+./[hostname]/do_stuff --> call MOD1_climenu_cmd_do_stuff(), MOD2_climenu_cmd_do_stuff(),
+AND --> call MOD1_climenu_cmds CMD, ....

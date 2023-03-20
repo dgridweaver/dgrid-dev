@@ -1,6 +1,5 @@
 #!/bin/bash
 
-#echo 0000
 
 nodecfg_gethostlist_hlpr() {
   echo "$HOST_id : hst=$HOST_dnsname"
@@ -78,7 +77,7 @@ print_vars() {
   done
 }
 
-source ${MODINFO_modpath_dgridsys}/thishostinfo.inc.bash
+#source ${MODINFO_modpath_dgridsys}/thishostinfo.inc.bash
 
 dgridsys_nodecfg_addthis() {
 distr_nodecfg_addthis $@
@@ -87,18 +86,12 @@ distr_nodecfg_addthis $@
 
 dgridsys_cli_help_nodecfg() {
   #echo -n
-  dgridsys_s
-  echo "nodecfg hostlist - list modules"
-  dgridsys_s
-  echo "nodecfg hostadd <> - ..."
-  dgridsys_s
-  echo "nodecfg add <> - ..."
-  dgridsys_s
-  echo "nodecfg addthis - try to add host & node of this install"
-  dgridsys_s
-  echo "nodecfg nodelist <> - ..."
-  dgridsys_s
-  echo "nodecfg nodelist-full <> - ..."
+  dgridsys_s; echo "nodecfg hostlist - list modules"
+  dgridsys_s; echo "nodecfg hostadd <> - ..."
+  dgridsys_s; echo "nodecfg add <> - ..."
+  dgridsys_s; echo "nodecfg addthis - try to add host & node of this install"
+  dgridsys_s; echo "nodecfg nodelist <> - ..."
+  dgridsys_s; echo "nodecfg nodelist-full <> - ..."
 
 }
 
@@ -149,7 +142,6 @@ dgridsys_cli_nodecfg() {
     return
   fi
 
-  #echo 11111
   if [ x$cmd == x"addthis" ]; then
     dbg_echo nodecfg_cli 3 "do addthis"
     shift 2
@@ -165,6 +157,16 @@ dgridsys_cli_nodecfg() {
   fi
 
   dbg_echo nodecfg_cli 4 "Before hostadd"
+
+
+  if [ x$cmd == x"hostcfg-empty-add" ]; then
+    shift 2
+    dgridsys_cli_main distr hostcfg-empty-add $*
+  fi
+  if [ x$cmd == x"nodecfg-empty-add" ]; then
+    shift 2
+    dgridsys_cli_main distr nodecfg-empty-add $*
+  fi
 
   if [ x$cmd == x"hostadd" ]; then
     dbg_echo nodecfg_cli 3 "do hostadd"

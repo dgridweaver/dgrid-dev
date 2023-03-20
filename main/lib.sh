@@ -132,14 +132,14 @@ _generic_listvar_x1() {
   fi
 }
 
-generic_listvars() {
+generic_listvars() { # [API]
   (
     set -o posix
     set
   ) | grep ^$1
 }
 
-generic_listvar_except() {
+generic_listvar_except() { # [API]
   pat="=*"
   (
     set -o posix
@@ -165,7 +165,7 @@ generic_cut_param() { # [API]
   dbg_echo generic 12 "generic_cut_param():pos=$pos addr=\""${ADDR[${pos}]}"\""
   echo -n ${ADDR[$pos]}
 }
-generic_cut_stdin() {
+generic_cut_stdin() { # [API]
   local ifs=$1
   local pos=$2
   shift 2
@@ -208,6 +208,22 @@ generic_var_content_priority() {
     fi
   done
 }
+
+generic_word_in_list() { # [API]
+  local sword=$1
+  shift 1
+  local plist=$*
+  dbg_echo generic 6 "plist=$plist sword=$sword"
+  for word in $plist; do
+    if [ x$sword == x$word ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+
+
 
 ##################################
 

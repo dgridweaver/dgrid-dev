@@ -1,4 +1,9 @@
+#!/bin/sh
 
 # dry_run by default
 imgpack_dryrun=1
 
+imgpack_target_arch="x86_64"
+
+# suffix for tmp dirs. set this to some random value during execution
+imgpack_suffix=""

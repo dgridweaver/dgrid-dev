@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo "#================ univ/basecfg ==================="
+echo "#base variables defined like temporary path"
+#( set -o posix ; set )| grep ^imgpack_
+echo imgpack_unpack_workdir=$imgpack_unpack_workdir
+echo imgpack_cache_this=$imgpack_cache_this
+echo imgpack_cache_result=$imgpack_cache_this
+
+

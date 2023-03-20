@@ -1,0 +1,30 @@
+#!/bin/bash 
+
+echo ------ $0 -------
+
+echo -n "src: "
+ls $imgpack_unpack_workdir|head -n 1
+
+srcdir=`ls -1 $imgpack_unpack_workdir|head -n 1`
+
+srcdir=$imgpack_unpack_workdir/$srcdir/
+#x.xx/python
+subdir=`ls -1 $srcdir | egrep "^[0-9]"`
+
+srcdir=$srcdir/$subdir/python
+echo "pydir=$srcdir"
+ls $srcdir
+if [ -d $srcdir/bin -a -d $srcdir/lib -a -d $srcdir/include ]; then
+echo "Ok, found srcdir/bin , srcdir/lib , srcdir/include"
+else
+echo "No srcdir/bin , srcdir/lib , srcdir/include found"
+exit
+fi
+cp -a $srcdir $imgpack_cache_result
+
+
+#ls -1 $srcdir
+
+
+
+

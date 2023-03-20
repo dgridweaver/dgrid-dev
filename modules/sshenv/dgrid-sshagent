@@ -12,7 +12,7 @@ cd `dirname $_file0`
 
 ################## [END] dgrid header1 ################ 
 
-main_exit_if_not_enabled sshkeymgr
+main_exit_if_not_enabled sshenv
 
 # DGRID_dir_dotlocal DGRID_dir_dotconfig DGRID_dir_dotcache DGRID_dir_nodelocal
 

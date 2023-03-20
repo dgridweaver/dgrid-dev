@@ -15,8 +15,10 @@ cd `dirname $_file0`
 
 main_exit_if_not_enabled run
 
-echo 
-echo "                  << run CLI util   >>"
-echo 
+#echo 
+#echo "                  << run CLI util   >>"
+#echo 
 
 #export MODINFO_dbg_run=4
+run_cli_run run $*
+

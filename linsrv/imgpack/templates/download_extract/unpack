@@ -1,0 +1,8 @@
+#!/bin/bash 
+
+echo ------ $0 -------
+
+_file="$imgpack_cache_this/$imgpack_src_file0"
+imgpack_util_extract "$imgpack_unpack_workdir" ${_file}
+
+

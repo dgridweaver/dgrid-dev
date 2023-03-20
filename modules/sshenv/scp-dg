@@ -13,11 +13,11 @@ cd `dirname $_file0`
 
 ################## [END] dgrid header1 ################ 
 
-main_exit_if_not_enabled sshzg
+main_exit_if_not_enabled sshenv
 
 #echo 
-#echo "                  << sshzg CLI util   >>"
+#echo "                  << ssh-dg CLI util   >>"
 #echo 
 
-#export MODINFO_dbg_sshzg=4
-sshzg_ssh_copy_id $*
+#export MODINFO_dbg_sshenv=4
+sshenv_scp $*

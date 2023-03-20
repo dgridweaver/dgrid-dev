@@ -12,7 +12,7 @@ cd `dirname $_file0`
 
 ################## [END] dgrid header1 ################ 
 
-main_exit_if_not_enabled sshkeymgr
+main_exit_if_not_enabled sshenv
 
 sshkeymgr_load_agent_vars
 sshkeymgr_status
@@ -25,7 +25,7 @@ echo MODINFO_modpath_sshkeymgr=$MODINFO_modpath_sshkeymgr
 
 
 echo "------------------------------"
-echo zg_fuser $SSH_AUTH_SOCK
-zg_fuser_q $SSH_AUTH_SOCK
+echo dcmd_fuser $SSH_AUTH_SOCK
+dcmd_fuser_q $SSH_AUTH_SOCK
 
 ssh-add -l

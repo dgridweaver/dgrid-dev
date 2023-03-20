@@ -1,0 +1,14 @@
+#!/bin/bash
+
+echo "================ mkdirs  ==================="
+
+echo mkdir -p $imgpack_cache_this
+echo mkdir -p $imgpack_cache_result
+echo mkdir -p $imgpack_unpack_workdir
+
+imgpack_ask
+
+
+imgpack_util_mkdir_p $imgpack_cache_this
+imgpack_util_mkdir_p $imgpack_unpack_workdir
+imgpack_util_mkdir_p $imgpack_cache_result

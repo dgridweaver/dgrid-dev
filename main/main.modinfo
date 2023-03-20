@@ -3,5 +3,5 @@ description="main mod - module system support"
 depend="bashengine"
 group="core"
 core="1.x"
-version="1.x-0.8"
+version="1.x-0.9"
 

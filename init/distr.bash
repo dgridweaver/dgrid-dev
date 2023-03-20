@@ -6,6 +6,9 @@ else
   return
 fi
 
+source ${MODINFO_modpath_distr}/distr_nodecfg.bash
+
+
 ################################
 # empty node creation
 ################################
@@ -124,99 +127,7 @@ distr_cli_modlist() {
     echo $s
   done
 }
-###################################################
 
-distr_nodecfg_addthis_cli() {
-#main_load_module_into_context nodecfg
-# hack just for install
-source "./main/nodecfg.bash"
-echo "ABORT, curently not working"
-# need to write code for 
-exit
-distr_nodecfg_addthis
-}
-
-distr_nodecfg_addthis() {
-  if [ "x$DGRID_dir_nodelocal" == "x" ]; then
-    echo "DGRID_dir_nodelocal not defined, aborting!"
-    exit
-  fi
-
-  HOST_dnsname=$1
-
-  if [ -n "$HOST_dnsname" ]; then
-    NODE_HOST=${HOST_dnsname%%.*}
-    HOST_id=${HOST_dnsname%%.*}
-  else
-    NODE_HOST=$(hostname -s)
-    HOST_id=$(hostname -s)
-    HOST_dnsname=$(hostname -f)
-  fi
-
-  if [ -n "$NODE_ID" ]; then
-    echo -n
-  else
-    NODE_IDsuffix=$(this_node_idsuffix)
-    NODE_ID="${USER}@${HOST_id}:$NODE_IDsuffix"
-  fi
-  echo NODE_ID=$NODE_ID
-
-  #hostcfg_hostid_exists "${HOST_id}"
-  #ret=$? #echo "hostid=${HOST_id}  ret=$ret"
-  #if [ "x$ret" == "x0"  ];  then
-  if hostcfg_hostid_exists "${HOST_id}"; then
-    echo "hostcfg_hostid_exists "${HOST_id}" - host id already exists"
-    hostid_exists="1"
-  fi
-  if nodecfg_nodeid_exists "${NODE_ID}"; then
-    echo "nodecfg_nodeid_exists "${NODE_ID}" - node id already exists"
-    nodeid_exists="1"
-  fi
-
-  local var=MODINFO_dbg_dgridsys
-  if [ ! x${!var} == x ]; then
-    if [ ${!var} -le 4 ]; then
-      echo "-- Vars: --"
-      set | grep "^DGRID"
-      #dgridsys_vars_list
-      echo "-- end Vars: --"
-    fi
-  fi
-
-  outdir_host=${DGRID_dir_nodelocal}/attach/thisnode/cfg/${HOST_id}/
-  outfile_host=${outdir_host}/${HOST_id}.hostinfo
-
-  NODE_ID_dir=${NODE_ID/:/_} 
-  outdir_node=${DGRID_dir_nodelocal}/attach/thisnode/cfg/${NODE_ID_dir}/
-  outfile_node=${outdir_node}/this.nodeconf
-
-  mkdir_ifnot ${outdir_host}
-  mkdir_ifnot ${outdir_node}
-
-  if [ x$hostid_exists != "x1" ]; then
-
-    echo
-    echo "# -- this_hostinfo -- "
-    this_hostinfo
-    echo -n "hostid_vars_all="
-    hostid_vars_all
-    print_vars $(hostid_vars_all)
-    print_vars $(hostid_vars_all) >$outfile_host
-
-  fi # if [ $hostid_exists != "1" ]; then
-
-  if [ x$nodeid_exists != "x1" ]; then
-
-    echo
-    echo "# -- this_nodeinfo -- "
-    this_nodeinfo
-    print_vars $(nodeid_vars_all) | grep -v "^HOST_"
-    print_vars $(nodeid_vars_all) | grep -v "^HOST_" >$outfile_node
-    echo
-
-  fi #
-
-}
 
 
 
@@ -289,6 +200,12 @@ distr_cli_help_do() {
   echo "${pref}runtime-which   - \"which\" in runtimes"
   echo "${pref}runtime-query   - query cmd in runtimes"
   echo "${pref}nodecfg-addthis   - call function to create node config (in subdir)"
+#  echo "${pref}nodecfg-addthis-noregister   - call function to create node config (in subdir)"
+  echo "${pref}nodecfg-empty-add-register   - create empty node (config-only)"
+  echo "${pref}nodecfg-empty-add   - create empty node (config, in subdir)"
+  echo "${pref}hostcfg-empty-add   - create empty host (config, in subdir)"
+  echo "${pref}nodecfg-subnode-add - add subnode"
+  echo "${pref}entitycfg-set - set param in file"
   #echo "  module-list   - "
 }
 
@@ -324,6 +241,11 @@ distr_cli_run() {
   if [ x${cmd} == x"runtime-which" ]; then distr_cli_runtime_which $params; fi
   if [ x${cmd} == x"runtime-query" ]; then distr_cli_runtime_query $params; fi
   if [ x${cmd} == x"nodecfg-addthis" ]; then distr_nodecfg_addthis_cli $params; fi
+  if [ x${cmd} == x"nodecfg-subnode-add" ]; then distr_nodecfg_subnode_add_cli $params; fi
+  if [ x${cmd} == x"nodecfg-empty-add" ]; then distr_nodecfg_empty_add_cli $params; fi
+  if [ x${cmd} == x"hostcfg-empty-add" ]; then distr_hostcfg_empty_add_cli $params; fi  
+  if [ x${cmd} == x"entitycfg-set" ]; then distr_entitycfg_set_cli $params; fi
+  
   if [ x${cmd} == x"" ]; then
     echo -n
     
@@ -332,7 +254,6 @@ distr_cli_run() {
       distr_cli_status
       distr_cli_help_do "   "
     else
-      echo aaa
       distr_cli_help_do "      distr "
     fi
     

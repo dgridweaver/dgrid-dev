@@ -1,0 +1,13 @@
+#!/bin/bash 
+
+echo ------ $0 -------
+
+#imgpack_base=
+
+echo imgpack_cache_this=$imgpack_cache_this
+ls $imgpack_cache_this
+
+# download into $imgpack_cache_this
+imgpack_src_download 0  # $imgpack_src_file0
+
+

@@ -1,0 +1,13 @@
+#!/bin/sh
+
+CONNECT_dnsname="" # dns name or IP
+CONNECT_sshopts="" # options for ssh
+CONNECT_sshport="" # ssh port. by default 22 used
+CONNECT_type="ssh" #
+CONNECT_user=      # user to ssh
+CONNECT_wdir=      # dir to cd for command execution
+
+################
+# useful values examples
+CONNECT_sshopts="PubkeyAuthentication=no" 
+CONNECT_type="local" # frce local connect - i.e just exec() 

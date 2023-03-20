@@ -25,7 +25,7 @@ export MODINFO_dbg_cfgstack=15
 
 #export CONNECT_type_override="local"
 #export CONNECT_type_override="ssh"
-export DRY_RUN=Y
+#export DRY_RUN=Y
 
 run_nodecmd $*
 

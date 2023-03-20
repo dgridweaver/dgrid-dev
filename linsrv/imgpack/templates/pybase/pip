@@ -1,0 +1,13 @@
+#!/bin/bash 
+
+echo ------ $0 -------
+
+echo imgpack_src_dir0=$imgpack_src_dir0
+ls $imgpack_src_dir0
+
+#python_dir="${imgpack_unpack_workdir}/pybase-${imgpack_target_arch}"
+#python_name=`ls -1 ${python_dir}/bin | grep "^python"|head -n 1`
+
+echo $imgpack_python_dir/bin/$python_name -m ensurepip
+$imgpack_python_dir/bin/$python_name -m ensurepip
+

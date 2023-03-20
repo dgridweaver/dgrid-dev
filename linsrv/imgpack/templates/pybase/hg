@@ -1,0 +1,8 @@
+#!/bin/bash 
+
+echo ------ $0 -------
+
+echo imgpack_python_pip_cmd=$imgpack_python_pip_cmd
+
+$imgpack_python_pip_cmd install mercurial
+

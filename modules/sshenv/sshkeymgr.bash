@@ -6,10 +6,13 @@ else
 return
 fi
 
+#name="sshkeymgr"
+#description="session management - ssh-agent for dgrid"
+
 #MODINFO_dbg_sshkeymgr=0
 #MODINFO_enable_sshkeymgr=
 
-zg_fuser_q() # [GENERIC] [API]
+dcmd_fuser_q() # [GENERIC] [API]
 {
 if [ "x$*" == "x" ]; then
 echo -n
@@ -114,9 +117,9 @@ fi
 
 
 dbg_echo sshkeymgr 1 SSH_AUTH_SOCK=$SSH_AUTH_SOCK
-str=`zg_fuser_q $SSH_AUTH_SOCK`
-dbg_echo sshkeymgr 1  "zg_fuser_q \"$SSH_AUTH_SOCK\""
-zg_fuser_q $SSH_AUTH_SOCK
+str=`dcmd_fuser_q $SSH_AUTH_SOCK`
+dbg_echo sshkeymgr 1  "dcmd_fuser_q \"$SSH_AUTH_SOCK\""
+dcmd_fuser_q $SSH_AUTH_SOCK
 #echo ----------------
 #echo str=$str
 
@@ -182,7 +185,7 @@ sshkeymgr_status_sshagent
 
 
 echo fuser \"$SSH_AUTH_SOCK\"
-zg_fuser_q $SSH_AUTH_SOCK
+dcmd_fuser_q $SSH_AUTH_SOCK
 
 ( set -o posix ; set )|grep "^SSH_"
 echo "  -- \"ps ax\" of ssh-agent --"

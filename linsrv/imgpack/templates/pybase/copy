@@ -1,0 +1,16 @@
+#!/bin/bash 
+
+echo ------ $0 -------
+
+echo imgpack_src_dir0=$imgpack_src_dir0
+ls $imgpack_src_dir0
+
+pybase_dir_name="pybase-${imgpack_target_arch}"
+
+# mkdir ${imgpack_unpack_workdir}/${pybase_dir_name} || exit
+set -x
+cp -a $imgpack_src_dir0/python ${imgpack_unpack_workdir}/${pybase_dir_name}
+set +x
+ls ${imgpack_unpack_workdir}
+
+

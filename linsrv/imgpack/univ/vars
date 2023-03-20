@@ -1,0 +1,6 @@
+#!/bin/bash
+
+export imgpack_cache_this="$HOME/.cache/dgrid/imgpack/${imgpack_id_name}"
+export imgpack_cache_result="$HOME/.cache/dgrid/imgpack/${imgpack_id_name}--result"
+export imgpack_unpack_workdir="$HOME/tmp/dgrid/imgpack/${imgpack_id_name}"
+

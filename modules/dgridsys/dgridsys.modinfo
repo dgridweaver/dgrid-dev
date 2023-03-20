@@ -2,5 +2,5 @@ name="dgridsys"
 description="main CLI interface, *important*"
 modtypes="bashscripts"
 core="1.x"
-version="1.x-0.3"
+version="1.x-0.4"
 group=core

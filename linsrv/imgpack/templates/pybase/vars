@@ -1,0 +1,8 @@
+#!/bin/sh
+imgpack_cmd_order="copy;pip"
+
+imgpack_python_dir="${imgpack_unpack_workdir}/pybase-${imgpack_target_arch}"
+imgpack_python_name=`ls -1 ${imgpack_python_dir}/bin | grep "^python"|head -n 1`
+imgpack_python_pip_name=`ls -1 ${imgpack_python_dir}/bin | grep "^pip"|head -n 1`
+imgpack_python_pip_cmd="$imgpack_python_dir/bin/$imgpack_python_name $imgpack_python_dir/bin/$imgpack_python_pip_name"
+

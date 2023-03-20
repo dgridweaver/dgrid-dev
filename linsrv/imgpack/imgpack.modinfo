@@ -2,5 +2,5 @@ name="imgpack"
 description="pack/repack iso/usb/tftp/lxd/etc linux boot images"
 group=addons
 depend=bashengine
-f_experimental=1
-version="1.x-0.2"
+#f_experimental=1
+version="1.x-0.3"

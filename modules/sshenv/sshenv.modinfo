@@ -1,4 +1,4 @@
-name="sshzg"
+name="sshenv"
 description="ssh - dgrid integration, ssh wrapper"
 group=addons
 depend=bashengine

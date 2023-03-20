@@ -15,26 +15,10 @@ cd `dirname $_file0`
 
 main_exit_if_not_enabled run
 
-#echo 
-#echo "                  << run CLI util   >>"
-#echo 
-
 export MODINFO_dbg_run=5
 
-function exit_abnormally1
-{
-echo $0 EXIT
-exit
-}
-
-
-_nodeid=$1
-if [ x$_nodeid = "x" ];then echo "no nodeid, exit";exit; fi
-
-echo nodeid=$_nodeid
-echo connect=$_profile
-
-export CONNECT_showconfig_mode=1
-run_nodecmd $*
-#run_hostcmd $*
-
+if [ "x$*" == "x" ]; then
+  echo "$0 [hostid|nodeid]: need parameters"
+  exit
+fi
+run_connectcfg_cli $*
