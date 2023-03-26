@@ -8,10 +8,31 @@ fi
 
 source ${MODINFO_modpath_distr}/distr_nodecfg.bash
 
+################################
+# generic function in distr
+################################
 
-################################
-# empty node creation
-################################
+#generic_echo(){
+#  local var="$1";printf %s\\n "$var";}
+
+distr_error(){
+echo -n `pwd`"/${BASH_SOURCE[1]} "": " 1>&2
+echo -n "${FUNCNAME[2]}() : " 1>&2
+echo -n $* 1>&2
+echo
+}
+distr_error_echo(){
+echo -n $* 1>&2
+echo
+}
+
+generic_word_prefix() { # [API]
+  local p=$1
+  shift 1
+  for i in $*; do
+    echo -n ${p}${i} " "
+  done
+}
 
 _distr_mkdir() {
   # mkdir_init
@@ -20,13 +41,56 @@ _distr_mkdir() {
   touch ./$1/.keep_me
 }
 
-distr__en_create_dirs() {
-  mkdir -p ./dgrid-site/
-  _distr_mkdir dgrid-site/bin
-  _distr_mkdir dgrid-site/modules
-  _distr_mkdir dgrid-site/etc
-  _distr_mkdir dgrid-site/etc/modules
+# use pref="local " run_is_entityid ENTITY_ID
+distr_is_entityid() # [API]
+{
+  local $eid
+  if nodecfg_nodeid_exists $eid; then
+    echo "${pref}eid_type=nodeid"
+    return 0
+  fi
+  if hostcfg_hostid_exists $eid; then
+    echo "${pref}eid_type=hostid"
+    return 0
+  fi
+  echo "${pref}eid_type=NONE"
+  return 1
 }
+distr_is_not_entityid() # [API]
+{
+  if run_is_entityid $1; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+distr_params_keyval_all() # [API] usage: pref="local " distr_params_keyval_all
+{
+  # 
+  local p p0 p1
+  # very simple params string checking and printing. use key=val where key is "normal" symbols
+  #echo $keys
+  #exit
+  for p in $*; do
+    p0=$(generic_cut_param "=" 1 "$p")
+    p1=$(generic_cut_param "=" 2 "$p")
+    if [ -z "$p0" ]; then continue; fi
+    if [ -z "$p1" ]; then continue; fi
+    #if [[ "$p0" =~ ^[a-zA-Z0-9]+$  ]]; then
+    if [[ ! "$p0" =~ ^[[:alnum:]]+$  ]]; then continue; fi
+    local r="\"\'\`"
+    if [[ "$p1" =~ $r  ]]; then continue; fi
+    if [ -n "$keys" ]; then
+      if generic_word_in_list $p0 $keys; then
+        echo "${pref}${p0}=\"$p1\";"
+      fi
+    else
+      echo "${pref}${p0}=\"$p1\";"
+    fi
+  done
+}
+
 
 ################################
 # support functions
@@ -47,6 +111,21 @@ distr_run_bash_clean() {
   echo RUN env -i $vl $bash_cmd $cmds 1>&2
   env -i $vl $bash_cmd $cmds
 }
+
+
+################################
+# empty node creation
+################################
+
+
+distr__en_create_dirs() {
+  mkdir -p ./dgrid-site/
+  _distr_mkdir dgrid-site/bin
+  _distr_mkdir dgrid-site/modules
+  _distr_mkdir dgrid-site/etc
+  _distr_mkdir dgrid-site/etc/modules
+}
+
 
 ################################
 
@@ -72,7 +151,6 @@ distr_cmds_list_check() {
     v1=$(distr_runtime_query $i)
     eval $v1
     unset v1
-    #echo aAAA runtime_rt_v_name=$runtime_rt_v_name
     echo -n "$i : "
     if [ "x$runtime_rt_id" == "x" ]; then
       echo -n "NOT_FOUND"
@@ -129,32 +207,19 @@ distr_cli_modlist() {
 }
 
 
-
-
 #############   runtime ###########################
 
 distr_cli_runtime_which() {
-  shift 2
   dbg_echo distr 5 F "*=$*"
   runtime_which $*
 }
 
 distr_cli_runtime_query() {
-  shift 2
   dbg_echo distr 5 F "*=$*"
   distr_runtime_query $*
 }
 
-#generic_echo(){
-#  local var="$1";printf %s\\n "$var";}
 
-generic_word_prefix() {
-  local p=$1
-  shift 1
-  for i in $*; do
-    echo -n ${p}${i} " "
-  done
-}
 
 distr_runtime_query() {
   local v v2 out1
@@ -201,16 +266,16 @@ distr_cli_help_do() {
   echo "${pref}runtime-query   - query cmd in runtimes"
   echo "${pref}nodecfg-addthis   - call function to create node config (in subdir)"
 #  echo "${pref}nodecfg-addthis-noregister   - call function to create node config (in subdir)"
-  echo "${pref}nodecfg-empty-add-register   - create empty node (config-only)"
-  echo "${pref}nodecfg-empty-add   - create empty node (config, in subdir)"
-  echo "${pref}hostcfg-empty-add   - create empty host (config, in subdir)"
-  echo "${pref}nodecfg-subnode-add - add subnode"
-  echo "${pref}entitycfg-set - set param in file"
-  #echo "  module-list   - "
+  echo "${pref}hostcfg-empty-add [new-host-id] - create empty host (config, in subdir)"
+  echo "${pref}nodecfg-empty-add [new-node-id] - create empty node (config, in subdir)"
+  echo "${pref}nodecfg-subnode-add - add subnode of THIS_... node"
+  echo "${pref}entitycfg-set  - set param in file"
+  echo "${pref}entitycfg-add [new-id] - add nodeid/hostid"
 }
 
 distr_cli_run() {
   local maincmd=$1 cmd=$2 name=$3
+  shift 2
   local params="$*"
 
   dbg_echo distr 5 x${maincmd} == x"distr"
@@ -234,18 +299,25 @@ distr_cli_run() {
 
 
 
-  if [ x${cmd} == x"status" ]; then distr_cli_status_long; fi
-  if [ x${cmd} == x"cmds-check" ]; then distr_cli_cmds_check; fi
-  if [ x${cmd} == x"module-list" ]; then distr_cli_modlist; fi
-  if [ x${cmd} == x"vars" ]; then distr_cli_vars; fi
-  if [ x${cmd} == x"runtime-which" ]; then distr_cli_runtime_which $params; fi
-  if [ x${cmd} == x"runtime-query" ]; then distr_cli_runtime_query $params; fi
-  if [ x${cmd} == x"nodecfg-addthis" ]; then distr_nodecfg_addthis_cli $params; fi
-  if [ x${cmd} == x"nodecfg-subnode-add" ]; then distr_nodecfg_subnode_add_cli $params; fi
-  if [ x${cmd} == x"nodecfg-empty-add" ]; then distr_nodecfg_empty_add_cli $params; fi
-  if [ x${cmd} == x"hostcfg-empty-add" ]; then distr_hostcfg_empty_add_cli $params; fi  
-  if [ x${cmd} == x"entitycfg-set" ]; then distr_entitycfg_set_cli $params; fi
-  
+  if [ x${cmd} == x"status" ]; then distr_cli_status_long; return $?; fi
+  if [ x${cmd} == x"cmds-check" ]; then distr_cli_cmds_check; return $?; fi
+  if [ x${cmd} == x"module-list" ]; then distr_cli_modlist; return $?; fi
+  if [ x${cmd} == x"vars" ]; then distr_cli_vars; return $?; fi
+  if [ x${cmd} == x"runtime-which" ]; then distr_cli_runtime_which $params; return $?; fi
+  if [ x${cmd} == x"runtime-query" ]; then distr_cli_runtime_query $params; return $?; fi
+  if [ x${cmd} == x"nodecfg-addthis" ]; then distr_nodecfg_addthis_cli $params; return $?; fi
+  if [ x${cmd} == x"nodecfg-subnode-add" ]; then distr_nodecfg_subnode_add_cli $params; return $?; fi
+  if [ x${cmd} == x"nodecfg-empty-add" ]; then distr_nodecfg_empty_add_cli $params; return $?; fi
+  if [ x${cmd} == x"hostcfg-empty-add" ]; then distr_hostcfg_empty_add_cli $params; return $?; fi  
+  if [ x${cmd} == x"entitycfg-set" ]; then distr_entitycfg_set_cli $params; return $?; fi
+  if [ x${cmd} == x"entitycfg-add" ]; then distr_entitycfg_add_cli $params; return $?; fi
+
+  if [ ! x${cmd} == x"" ]; then
+      echo "ERROR! - distr module do not have \"$cmd\" subcommand"
+      return 1
+  fi
+
+
   if [ x${cmd} == x"" ]; then
     echo -n
     
@@ -256,7 +328,7 @@ distr_cli_run() {
     else
       distr_cli_help_do "      distr "
     fi
-    
+    return 1
   fi
-
+  
 }

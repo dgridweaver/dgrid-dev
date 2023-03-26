@@ -86,12 +86,14 @@ distr_nodecfg_addthis $@
 
 dgridsys_cli_help_nodecfg() {
   #echo -n
-  dgridsys_s; echo "nodecfg hostlist - list modules"
-  dgridsys_s; echo "nodecfg hostadd <> - ..."
-  dgridsys_s; echo "nodecfg add <> - ..."
-  dgridsys_s; echo "nodecfg addthis - try to add host & node of this install"
-  dgridsys_s; echo "nodecfg nodelist <> - ..."
-  dgridsys_s; echo "nodecfg nodelist-full <> - ..."
+  dgridsys_s; echo "nodecfg add <new-id> type=node-this - create config for \"this\" node"
+  dgridsys_s; echo "nodecfg add <new-id> type=node-empty - create empty node"
+  dgridsys_s; echo "nodecfg add <new-id> type=node-subnode - create subnode of this node"
+  dgridsys_s; echo "nodecfg add <new-id> type=host-empty - create empty node"
+#  dgridsys_s; echo "nodecfg addthis - try to add host & node of this install"
+  dgridsys_s; echo "nodecfg hostlist - list hostid"
+  dgridsys_s; echo "nodecfg nodelist - list nodeid"
+  dgridsys_s; echo "nodecfg nodelist-full - list nodeid info"
 
 }
 
@@ -101,21 +103,10 @@ _add_hostcfg_hlpr() {
   echo [2] HOST_id=$HOST_id 1>&2
 }
 
-dgridsys_nodecfg_add_hostcfg() {
-  #export hst1=$1
-  #hst2=$2
-
-  HOST_id=$1
-  HOST_hostname=$2
-
-  nodecfg_add_hostcfg _add_hostcfg_hlpr
-}
 
 dgridsys_cli_nodecfg() {
-  hst1=$3
-  param1=$3
-  hst2=$4
-
+  local hst1="$3" param1="$3" hst2="$4" ret=0
+  
   if [ x$cmd == x"hostlist" ]; then
     #echo
     echo "--- host of nodes list  ---"
@@ -136,17 +127,10 @@ dgridsys_cli_nodecfg() {
   if [ x$cmd == x"nodelist-full" ]; then
     #echo
     echo --------- node list -----------
-    #echo
     nodecfg_getnodelist_full
+    ret=$?
     echo
-    return
-  fi
-
-  if [ x$cmd == x"addthis" ]; then
-    dbg_echo nodecfg_cli 3 "do addthis"
-    shift 2
-    dgridsys_nodecfg_addthis $*
-    return
+    return $ret
   fi
 
   if [ x$hst1 == x ]; then
@@ -156,28 +140,10 @@ dgridsys_cli_nodecfg() {
     exit
   fi
 
-  dbg_echo nodecfg_cli 4 "Before hostadd"
-
-
-  if [ x$cmd == x"hostcfg-empty-add" ]; then
+  if [ x$cmd == x"add" ]; then
     shift 2
-    dgridsys_cli_main distr hostcfg-empty-add $*
-  fi
-  if [ x$cmd == x"nodecfg-empty-add" ]; then
-    shift 2
-    dgridsys_cli_main distr nodecfg-empty-add $*
+    dgridsys_cli_main distr entitycfg-add $*
+    return $?
   fi
 
-  if [ x$cmd == x"hostadd" ]; then
-    dbg_echo nodecfg_cli 3 "do hostadd"
-
-    if [ x$hst2 == x ]; then
-      echo "nodecfg hostadd  <host name as ID,short> <hostname>"
-      echo
-      exit
-    fi
-    #nodecfg_add_hostcfg_cli1 $hst1 $hst2
-    dgridsys_nodecfg_add_hostcfg $hst1 $hst2
-    exit
-  fi
 }

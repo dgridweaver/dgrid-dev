@@ -13,12 +13,11 @@ cd `dirname $_file0`
 
 ################## [END] dgrid header1 ################ 
 
-main_exit_if_not_enabled run
+main_exit_if_not_enabled sshenv
 
-#export MODINFO_dbg_run=5
-
-if [ "x$*" == "x" ]; then
-  echo "$0 [hostid|nodeid]: need parameters"
+#export MODINFO_dbg_sshenv=4
+if [ x$1 == x ]; then
+  echo "usage: $0 <nodeid|hostid>"
   exit
 fi
-run_connectcfg_cli $*
+sshenv_install_id_cli $@

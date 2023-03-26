@@ -20,7 +20,7 @@ cd `dirname $_file0`
 #echo "                  << distr-dgrid >>"
 #echo 
 #export MODINFO_dbg_init=4
-export MODINFO_dbg_distr=10
+#export MODINFO_dbg_distr=10
 
 distr_cli_main $*
 

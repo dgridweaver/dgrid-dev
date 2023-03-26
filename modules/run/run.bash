@@ -8,6 +8,7 @@ fi
 
 MODINFO_dbg_run=0
 #MODINFO_enable_run=
+run_CLIMENU_CMDS_LIST="hostcmd nodecmd ping connectcfg shell"
 
 source ${MODINFO_modpath_run}/connect.conf
 
@@ -61,38 +62,6 @@ run_print_module_info() {
 }
 
 ############## pings ##########################
-
-run_ping_cli() {
-  echo "* = $*"
-  exit
-  run_ping $3
-}
-
-
-
-run_ping_cli_bak1() {
-  local entity_id=$1
-  if nodecfg_nodeid_exists "$entity_id"; then
-    dbg_echo run 5 F "nodeid \"$entity_id\" found"
-    dbg_echo run 5 F "Load nodeid ($entity_id) configs"
-    nodecfg_nodeid_load $entity_id "rmt_"
-    if [ "x$?" == "x0" ]; then
-      echo -n
-    else
-      echo "abort on nodecfg_nodeid_load  ret=$?"
-      exit
-    fi
-  else
-    dbg_echo run 4 F "Node not exists"
-    if hostcfg_hostid_exists "$entity_id"; then
-      dbg_echo run 5 F "NO NODE MODE, hostid exists, load hostid"
-      hostcfg_hostid_load ${entity_id} "rmt_"
-    else
-      echo "no nodeid or hostid, abort"
-      return 1
-    fi
-  fi
-}
 
 run_ping_cli() {
   local entity_id=$1 _params
@@ -230,10 +199,32 @@ run_allgrid_nodeshellcmd_cmd() {
 }
 
 run_connectcfg_cli(){
-  run_showconfig $*
+  local eid=$1
+  shift 1
+  if [ "x$eid" == "x" ]; then
+    echo "use: run_connectcfg_cli (entityid)"
+    exit
+  fi
+  run_showconfig $eid $*
   echo -----------------------
-  export DRY_RUN=Y
-  run_nodecmd $*
+  export RUN_DRY_RUN=Y
+  if nodecfg_nodeid_exists $eid; then
+    run_nodecmd $eid $*
+  fi
+  if hostcfg_hostid_exists $eid; then
+    run_hostcmd $eid $*
+  fi
+}
+
+run_exec_f(){
+  exec $@
+}
+
+run_is_entityid(){ # [API]
+  distr_is_entityid $@
+}
+run_is_not_entityid(){ # [API]
+  distr_is_not_entityid $@
 }
 
 ############ climenu ##############
@@ -243,11 +234,12 @@ run_connectcfg_cli(){
 
 run_climenu_cmds() {
   local cmd=$1 eid=$2 f
+  dbg_echo run 5 F ": $*"
   shift 2
-  echo "run_climenu_cmds(): $*"
+  local params=$*
   if generic_word_in_list $cmd $RUN_climenu_cmd_list; then
-    #f="run_${cmd}_cli"  #eval "$f $eid"
-    run_cli_run run $cmd $eid $* 
+    dbg_echo run 8 F "run_cli_run run $cmd $eid $params "
+    run_cli_run run $cmd $eid $params 
     return 0
   else
     return 1
@@ -262,11 +254,9 @@ run_help_cli() {
   dgridsys_s;echo "run nodecmd <node id> <cmd> - run dgridsys command on node <nodeid>"
   dgridsys_s;echo "run hostcmd <host id> <cmd> - run command on host <hostid>"
   dgridsys_s;echo "run ping <hostid|nodeid> [params] - run ping/etc on <hostid+nodeid>"
-  dgridsys_s;echo "run local_exec - helper func for run"
-  dgridsys_s;echo "run connectcfg <host|node id>> - chack connect config <hostid>"
-
+  #dgridsys_s;echo "run local_exec - helper func for run"
+  dgridsys_s;echo "run connectcfg <host|node id> - chack connect config <hostid>"
   dgridsys_s;echo "run nodeshellcmd <node id> <cmd> - run shell command on node <nodeid>"
-  dgridsys_s;echo "run nodecli <node id> [cmd] - run cli command on node <nodeid> like ../module-list"
   dgridsys_s;echo "run allgrid-nodecmd <cmd> - run dgridsys command on all (active) nodes"
   dgridsys_s;echo "run allgrid-hostcmd <cmd> - run command on all (active) hosts"
   dgridsys_s;echo "run allgrid-nodeshellcmd <cmd> - run shell command on   on all (active) hosts"
@@ -278,8 +268,7 @@ run_cli_run() {
   name=$3
 
   dbg_echo run 2 run_cli_run dgridsys_cli_run_argv=$dgridsys_cli_run_argv
-  #*=$dgridsys_cli_run_argv
-  #exit
+  dbg_echo run 2 F "*=$*"
 
   dbg_echo run 5 x${maincmd} == x"run"
   if [ x${maincmd} == x"run" ]; then
@@ -299,23 +288,28 @@ run_cli_run() {
     run_ping_cli $*
   fi
 
+  if [ x${cmd} == x"shell" ]; then
+    shift 2
+    run_shell_cli $*
+  fi
+
 
   if [ x${cmd} == x"nodeshellcmd" ]; then
-    echo -n
     shift 2
-    cli_cmd=$cmd run_nodecmd $*
+    local n=$1
+    shift 1
+    run_nodecmd $1 run exec_f $*
   fi
 
   if [ x${cmd} == x"nodecmd" ]; then
-    echo -n
     shift 2
     run_nodecmd $*
   fi
 
   if [ x${cmd} == x"hostcmd" ]; then
-    echo -n
     shift 2
-    run_hostcmd $*
+    echo "*=$*"
+    run_hostcmd_cli $*
   fi
 
   if [ x${cmd} == x"connectcfg" ]; then
@@ -324,10 +318,11 @@ run_cli_run() {
     run_connectcfg_cli $*
   fi
 
-  if [ x${cmd} == x"local_exec" ]; then
+# helper function
+  if [ x${cmd} == x"exec_f" ]; then
     echo -n
     shift 2
-    run_local_exec $*
+    run_exec_f $*
   fi
 
   if [ x${cmd} == x"allgrid-nodecmd" ]; then

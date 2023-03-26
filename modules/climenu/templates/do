@@ -15,9 +15,5 @@ cd `dirname $_file0`
 
 main_exit_if_not_enabled climenu
 
-#echo 
-#echo "                  << climenu CLI util   >>"
-#echo 
-
 #export MODINFO_dbg_climenu=4
 climenu_run_menu $*

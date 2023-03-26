@@ -7,7 +7,11 @@ CONNECT_type="ssh" #
 CONNECT_user=      # user to ssh
 CONNECT_wdir=      # dir to cd for command execution
 
+CONNECT_ssh_keydir="" # 
+CONNECT_ssh_keyfile="" # id_rsa
+
+
 ################
 # useful values examples
-CONNECT_sshopts="PubkeyAuthentication=no" 
-CONNECT_type="local" # frce local connect - i.e just exec() 
+CONNECT_sshopts="-o PubkeyAuthentication=no" 
+CONNECT_type="local" # force local connect - i.e just exec() 

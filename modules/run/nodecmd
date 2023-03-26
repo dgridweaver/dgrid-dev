@@ -15,17 +15,12 @@ cd `dirname $_file0`
 
 main_exit_if_not_enabled run
 
-#echo 
-#echo "                  << run CLI util   >>"
-#echo 
-
-export MODINFO_dbg_run=15
-export MODINFO_dbg_nodecfg=15
-export MODINFO_dbg_cfgstack=15
-
+#export MODINFO_dbg_run=15
+#export MODINFO_dbg_nodecfg=15
+#export MODINFO_dbg_cfgstack=15
 #export CONNECT_type_override="local"
 #export CONNECT_type_override="ssh"
-#export DRY_RUN=Y
+#export RUN_DRY_RUN=Y
 
 run_nodecmd $*
 

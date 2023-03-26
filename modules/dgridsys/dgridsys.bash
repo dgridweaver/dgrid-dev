@@ -92,13 +92,16 @@ export dgridsys_cli_run_argv
 dgridsys_cli_run_hook() {
   local var
   #dgridsys_cli_main_run
-  export dgridsys_cli_run_argv=$*
-  var=$*
+  export dgridsys_cli_run_argv="$*"
+  var="$*"
   var=${var//(/\\\(}
   var=${var//)/\\\)}
   var=${var//;/\\\;}
-  #if thenfi #echo var=$var
-  main_call_hook cli_run $var
+  var=${var//\"/\\\"}
+  var=${var//\'/\\\'}
+  var=${var//\`/\\\`}
+  dbg_echo dgridsys  3 F var=$var
+  main_call_hook cli_run "$var"
 }
 
 dgridsys_cli_run() {
@@ -147,13 +150,14 @@ dgridsys_cli_helpsys() {
 
 dgridsys_cli_main() { # [API] [RECOMENDED]
   #echo "cli start"
-  cmd=$1
+  local cmd=$1
+  local dgridsys_cli_main_cmd_found=0
 
   if [ x"$cmd" == x -o x"$cmd" == x"NONE" ]; then
-    dgridsys_cli_help_hook $*
+    dgridsys_cli_help_hook $@
     echo ""
     exit
   fi
-  dgridsys_cli_run_hook $*
+  dgridsys_cli_run_hook $@
   #echo "cmd \"$1\" not found"
 }

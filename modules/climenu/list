@@ -13,12 +13,7 @@ cd `dirname $_file0`
 
 ################## [END] dgrid header1 ################ 
 
-main_exit_if_not_enabled run
+main_exit_if_not_enabled climenu
 
-#export MODINFO_dbg_run=5
-
-if [ "x$*" == "x" ]; then
-  echo "$0 [hostid|nodeid]: need parameters"
-  exit
-fi
-run_connectcfg_cli $*
+#export MODINFO_dbg_climenu=4
+climenu_list_cli

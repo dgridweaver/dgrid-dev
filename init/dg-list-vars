@@ -34,6 +34,7 @@ set|grep ^GRID
 set|grep ^MODINFO_
 set|grep ^MODULE_
 set|grep ^mods_
+set|grep ^NODECFG_
 }
 
 echo
