@@ -13,10 +13,13 @@ cd `dirname $_file0`
 
 ################## [END] dgrid header1 ################ 
 
-main_exit_if_not_enabled updnode
+main_exit_if_not_enabled init
+export MODINFO_dbg_init=10
 
-#echo 
-#echo "                  << updnode CLI util   >>"
-#echo 
-
-udpmod1_pull_all_mainrepos
+if [ -n ${MODINFO_modpath_init} ]; then
+  source ${MODINFO_modpath_init}/init.bash
+else
+  echo "init: ERROR: MODINFO_modpath_init not set"
+  exit
+fi
+init_cli_run init $*

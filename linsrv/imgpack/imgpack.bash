@@ -62,19 +62,6 @@ imgpack_run_menu_op() {
 }
 
 
-generic_word_in_list() {
-  local sword=$1
-  shift 1
-  local plist=$*
-  dbg_echo generic 6 "plist=$plist sword=$sword"
-  for word in $plist; do
-    if [ x$sword == x$word ]; then
-      return 0
-    fi
-    return 1
-  done
-}
-
 
 imgpack_run_cmd_do1() {
   local v

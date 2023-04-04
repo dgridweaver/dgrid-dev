@@ -127,7 +127,7 @@ nodecfg_nodeid_exists() { # [API] [RECOMENDED]
 
   if [ -z "$nodeid" ]; then
     dbg_echo nodecfg 1 "nodecfg_nodeid_exists : empty nodeid"
-    return
+    return 1
   fi
 
   cfg=$(nodecfg_nodeid_cfgfile $nodeid)

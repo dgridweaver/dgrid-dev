@@ -15,19 +15,17 @@ cd `dirname $_file0`
 
 main_exit_if_not_enabled attach
 
-echo 
-echo "                  << attach CLI util   >>"
-echo 
-
 if [ x$1 == x ]; then
-echo "$0 <path-to-node> [-n <id>] "
-echo "   attach newnode in same user on same host in directory <path>"
+echo "$0 <path-to-node> key1=val1 key2=val2"
+echo "      <path-to-node> - username@hostname:suffix/path/to/node/install "
+echo "      attach new node on host hostname, user username in directory <path>"
+#echo "   attach newnode in same user on same host in directory <path>"
+
 exit
 fi
 
 #export MODINFO_dbg_attach=4
-export MODINFO_dbg_dgridsys=4
+#export MODINFO_dbg_dgridsys=4
 
-#set -x
-attach_newnode_local $*
+attach_newnode_cli $*
 

@@ -15,11 +15,16 @@ cd `dirname $_file0`
 
 main_exit_if_not_enabled updnode
 
-#echo 
-#echo "                  << updnode CLI util   >>"
-#echo 
+echo 
+echo "                  << updthis CLI util   >>"
+echo 
+cfgstack_cfg_op "etc/updnode.conf" $THIS_NODEID op=trace
+#cfgstack_cfg load UNKNOWN "/etc/updnode.conf" $THIS_NODEID
 
-echo "push updates to active grid nodes"
-#export MODINFO_dbg_hoststat=6
-export MODINFO_dbg_updnode=6
-updnode_push_to_grid_cmd $*
+#export MODINFO_dbg_updnode=14
+updthis_showcfg
+echo ===
+updthis_upd_simple
+#run
+
+

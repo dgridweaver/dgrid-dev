@@ -10,6 +10,8 @@ CONNECT_wdir=      # dir to cd for command execution
 CONNECT_ssh_keydir="" # 
 CONNECT_ssh_keyfile="" # id_rsa
 
+CONNECT_hostkeyalias_nodeid=0 # 0|1 use nodeid as host alias
+
 
 ################
 # useful values examples

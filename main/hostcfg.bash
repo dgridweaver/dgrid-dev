@@ -289,7 +289,7 @@ hostcfg_hostid_exists() { # [API] [RECOMENDED]
 
   if [ -z "$hostid" ]; then
     echo "hostcfg_hostid_exists : empty nodeid"
-    return
+    return 1
   fi
 
   cfg=$(hostcfg_hostid_cfgfile $hostid)

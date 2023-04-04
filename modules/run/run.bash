@@ -8,7 +8,6 @@ fi
 
 MODINFO_dbg_run=0
 #MODINFO_enable_run=
-run_CLIMENU_CMDS_LIST="hostcmd nodecmd ping connectcfg shell"
 
 source ${MODINFO_modpath_run}/connect.conf
 
@@ -24,7 +23,7 @@ run_hostid_vars() {
 
 run_nodeid_vars() {
   #echo -n " NODE_sshport NODE_sshopts "
-  echo NODE_sshport NODE_sshopts
+  echo -n NODE_sshport NODE_sshopts
 }
 
 run_env_start() {
@@ -45,15 +44,8 @@ run_connect_dnsname_set() {
   local _hostid=$1
   local _pref=$2
 
-  #if [ x"$MODINFO_enable_hoststat" == xY  ]; then
-  #fi
-
-  #HOST_dnsname
-  #incoming_scanhst
-
   export ${_pref}CONNECT_dnsname=$(generic_var_content_priority ${_pref}CONNECT_dnsname \
     ${_pref}HOST_dnsname ${_pref}HOST_id)
-
 }
 
 run_print_module_info() {
@@ -237,6 +229,7 @@ run_climenu_cmds() {
   dbg_echo run 5 F ": $*"
   shift 2
   local params=$*
+  dbg_echo run 5 F "if:" generic_word_in_list $cmd $RUN_climenu_cmd_list ";";
   if generic_word_in_list $cmd $RUN_climenu_cmd_list; then
     dbg_echo run 8 F "run_cli_run run $cmd $eid $params "
     run_cli_run run $cmd $eid $params 

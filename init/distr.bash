@@ -17,7 +17,7 @@ source ${MODINFO_modpath_distr}/distr_nodecfg.bash
 
 distr_error(){
 echo -n `pwd`"/${BASH_SOURCE[1]} "": " 1>&2
-echo -n "${FUNCNAME[2]}() : " 1>&2
+echo -n "${FUNCNAME[1]}() : " 1>&2
 echo -n $* 1>&2
 echo
 }
@@ -44,12 +44,12 @@ _distr_mkdir() {
 # use pref="local " run_is_entityid ENTITY_ID
 distr_is_entityid() # [API]
 {
-  local $eid
-  if nodecfg_nodeid_exists $eid; then
+  local eid=$1
+  if nodecfg_nodeid_exists "$eid"; then
     echo "${pref}eid_type=nodeid"
     return 0
   fi
-  if hostcfg_hostid_exists $eid; then
+  if hostcfg_hostid_exists "$eid"; then
     echo "${pref}eid_type=hostid"
     return 0
   fi
@@ -65,20 +65,26 @@ distr_is_not_entityid() # [API]
   fi
 }
 
+distr_is_module_name() { # API
+  local var=MODINFO_modpath_$1
+  if [ -n "${!var}" ]; then return 0; else return 1; fi
+}
+
+distr_is_not_module_name() { # API
+  if distr_is_module_name $1; then return 1; else return 0; fi
+}
+
+
 distr_params_keyval_all() # [API] usage: pref="local " distr_params_keyval_all
 {
   # 
   local p p0 p1
-  # very simple params string checking and printing. use key=val where key is "normal" symbols
-  #echo $keys
-  #exit
   for p in $*; do
     p0=$(generic_cut_param "=" 1 "$p")
     p1=$(generic_cut_param "=" 2 "$p")
     if [ -z "$p0" ]; then continue; fi
     if [ -z "$p1" ]; then continue; fi
-    #if [[ "$p0" =~ ^[a-zA-Z0-9]+$  ]]; then
-    if [[ ! "$p0" =~ ^[[:alnum:]]+$  ]]; then continue; fi
+    if [[ ! "$p0" =~ ^[[:alnum:]_]+$  ]]; then continue; fi
     local r="\"\'\`"
     if [[ "$p1" =~ $r  ]]; then continue; fi
     if [ -n "$keys" ]; then

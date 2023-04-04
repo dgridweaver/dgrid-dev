@@ -33,6 +33,10 @@ distr_parse_nodeid() # [API]
 }
 
 
+distr_nodecfg_addthis_cli(){
+distr_nodecfg_addthis
+}
+
 distr_nodecfg_addthis() {
   if [ "x$DGRID_dir_nodelocal" == "x" ]; then
     echo "DGRID_dir_nodelocal not defined, aborting!"
@@ -495,7 +499,7 @@ distr_entitycfg_get_info(){
   fi
   if hostcfg_hostid_exists "${eid}"; then
     eid_dir=`hostcfg_hostid_cfgdir ${eid}`
-    eid_file=`hostcfg_hostid_cfgfilwe ${eid}`
+    eid_file=`hostcfg_hostid_cfgfile ${eid}`
     eid_type="host"
   fi
   echo "eid_dir=$eid_dir eid_file=$eid_file  eid_type=$eid_type"

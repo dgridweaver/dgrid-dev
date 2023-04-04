@@ -105,11 +105,7 @@ dgridsys_cli_run_hook() {
 }
 
 dgridsys_cli_run() {
-  maincmd=$1
-  cmd=$2
-  name=$3
-  #echo $*
-  #exit
+  local maincmd="$1"  cmd="$2"  name="$3"
 
   dbg_echo dgridsys 5 x${maincmd} == x"module"
   if [ x${maincmd} == x"module" ]; then

@@ -1,398 +1,461 @@
 #!/bin/bash
 
 if [ x$MODINFO_loaded_attach == "x" ]; then
-export MODINFO_loaded_attach="Y"
+  export MODINFO_loaded_attach="Y"
 else
-return
+  return
 fi
 
 #MODINFO_dbg_attach=5
-MODINFO_msg_attach=1
+MODINFO_msg_attach=2
 
-ATTACH_timestamp=`date +%Y%d-%H%M-%s`
+ATTACH_timestamp=$(date +%Y%d-%H%M-%s)
 
-ATTACH_workdir="${GRIDBASEDIR}/not-in-vcs/attach/current-op-${ATTACH_timestamp}"
-ATTACH_remote_workdir_rel="not-in-vcs/attach/this_node_tmp"
+ATTACH_workdir="${DGRIDBASEDIR}/${DGRID_localdir}/attach/current-op-${ATTACH_timestamp}"
+ATTACH_workdir_out=${ATTACH_workdir}/out
+# use in init module during init
+INIT_remote_workdir_rel="./${DGRID_localdir}/attach/thisnode/cfg_incoming/"
+INIT_remote_outgoing_rel="./${DGRID_localdir}/attach/thisnode/cfg_outgoing/"
+
+source ${MODINFO_modpath_attach}/attach.default.conf
 
 if [ -f ./dgrid-site/etc/attach.conf ]; then
-source ./dgrid-site/etc/attach.conf
-else
-# load default config from module dir
-source ${MODINFO_modpath_attach}/attach.default.conf
-#ATTACH_HGCLONE_PARAMS=" --config format.dotencode=0 --config format.usedotencode=0 "
+  source ./dgrid-site/etc/attach.conf
 fi
 
+export ATTACH_DRY_RUN=0
 
-attach_print_module_info()
-{
-echo "attach: mod info, called attach_print_module_info"
+export attach_CLIMENU_CMDS_LIST="attach_deploy attach_redeploy attach_check"
+attach_climenu_cmd_attach_deploy(){ attach_deploy_cli $@; }
+attach_climenu_cmd_attach_redeploy(){ attach_redeploy_cli $@; }
+attach_climenu_cmd_attach_check(){ attach_check_cli $@; }
 
+
+
+
+attach_run(){
+  if [ x$ATTACH_DRY_RUN == x1 ]; then
+    echo $*
+  else
+    eval $*
+  fi
 }
 
-attach_create_nodearch()
-{
-mkdir -p ${ATTACH_workdir}
-
-#hg archive -p ${DGRID_dgridname} ${ATTACH_workdir}/current_node.tar
-#attach_create_arch1 ${DGRID_dgridname} ${ATTACH_workdir}/current_node.tar
-mkdir -p ${ATTACH_workdir}/tmp1/
-hg $ATTACH_HGCLONE_PARAMS clone --pull ./ ${ATTACH_workdir}/tmp1/${DGRID_dgridname}
-
-echo tar cf ${ATTACH_workdir}/current_node.tar ${ATTACH_workdir}/tmp1/${DGRID_dgridname}/
-pushd ${ATTACH_workdir}/tmp1/${DGRID_dgridname}/  > /dev/null
-tar cf ${ATTACH_workdir}/current_node.tar ./
-popd > /dev/null
-#rm -rf ${ATTACH_workdir}/tmp1/
-rm -rf ${ATTACH_workdir}/tmp1/
-
-mkdir -p ${ATTACH_workdir}/tmp1/
-pushd dgrid > /dev/null
-#hg archive -p dgrid  ${ATTACH_workdir}/current_node_dgriddistr.tar
-#attach_create_arch1 ${ATTACH_workdir}/current_node_dgriddistr.tar
-hg $ATTACH_HGCLONE_PARAMS clone  --pull ./ ${ATTACH_workdir}/tmp1/dgrid
-popd > /dev/null
-pushd ${ATTACH_workdir}/tmp1/  > /dev/null
-tar cf ${ATTACH_workdir}/current_node_dgriddistr.tar ./
-popd > /dev/null
-
-echo -n "pwd=" ; pwd
-cp ./dgrid/modules/attach/attach-copied-installer.sh ${ATTACH_workdir}/
-
-rm -rf ${ATTACH_workdir}/tmp1/
-
-#exit
+attach_print_module_info() {
+  echo "attach: create cfg and deploy new nodes, remotely and locally"
 }
 
-attach__savevar()
-{
-echo "export $1=\"$2\"">> ${ATTACH_workdir}/attach.vars
+attach_nodeid_vars() {
+  echo NODE_f_attach_mode
 }
 
-
-attach_parsenodestr()
-{
-
-newnode_user=`echo $*|cut -f1 -d\@`
-_rest=`echo $*|cut -f2 -d@`
-newnode_host=`echo ${_rest}|cut -f1 -d:`
-newnode_path=`echo ${_rest}|cut -f2 -d:`
-
+attach__savevar() {
+  echo "export $1=\"$2\"" >>${ATTACH_workdir_out}/attach.vars
 }
 
-attach_newnode___prepare()
-{
-echo -n
+attach__savestr() {
+  echo "$1" >>${ATTACH_workdir_out}/attach.vars
 }
 
-attach_newnode()
-{
-#msg_echo attach 2 "start "
-dbg_echo attach 3 "start"
-attach_parsenodestr $attach_newnodestr
+attach_parsenodestr() {
+  local str=$1 _rest str1 str2
+  dbg_echo attach 8 F "start"
+  
+  if [[ "$str" == *"/"* ]]; then
+     str1=$(echo ${str} | cut -f1 -d/)
+     str2=${str/"$str1"/}
+  else
+     str1=$str
+  fi
 
-if [ x$attach_opt_n == x ]; then
-local newnode_namesuffix="one"
-else
-local newnode_namesuffix=$attach_opt_n
-fi
+  local newnode_id=$str1
+  local newnode_user=$(echo $str1 | cut -f1 -d\@)
+  _rest=$(echo $str1 | cut -f2 -d@)
+  local newnode_host=$(echo ${_rest} | cut -f1 -d:)
+  local newnode_namesuffix=$(echo ${_rest} | cut -f2 -d:)
+  local newnode_path="$str2"
+  echo -n "newnode_id=\"$newnode_id\" "
+  echo -n "newnode_user=\"$newnode_user\" newnode_host=\"$newnode_host\" "
+  echo -n "newnode_namesuffix=\"$newnode_namesuffix\" newnode_path=\"$newnode_path\""
 
-if [ x$newnode_path = "x" ]; then 
-msg_echo attach 1 "Path to new node not set, exiting"
-exit
-fi
-
-
-echo newnode_user=$newnode_user
-echo newnode_host=$newnode_host
-echo newnode_path=$newnode_path
-echo newnode_namesuffix=$newnode_namesuffix
-
-
-#exit
-#ssh ${newnode_user}@${newnode_host}
-#DGRID_dgridname
-
-# create archives with node files
-msg_echo attach 2 "create archives with node config and script files, dgrid distribytion"
-attach_create_nodearch
-
-attach__savevar DGRID_dgridname ${DGRID_dgridname}
-attach__savevar newnode_host $newnode_host
-attach__savevar newnode_user $newnode_user
-attach__savevar newnode_path $newnode_path
-attach__savevar newnode_namesuffix $newnode_namesuffix
-
-_tmpdir_remote=${newnode_path}/${DGRID_dgridname}/${ATTACH_remote_workdir_rel}
-_dgriddir_remote=${newnode_path}/${DGRID_dgridname}
-
-attach__savevar _tmpdir_newnode ${_tmpdir_remote}
-attach__savevar _dgriddir_newnode ${_dgriddir_remote}
-
-msg_echo attach 2 "Copy install files to target user@host (${newnode_user}@${newnode_host})"
-set -x
-ssh ${newnode_user}@${newnode_host} mkdir -p ${_tmpdir_remote}
-scp ${ATTACH_workdir}/current_node.tar \
-  ${ATTACH_workdir}/current_node_dgriddistr.tar \
-  ${ATTACH_workdir}/attach.vars \
-  ${ATTACH_workdir}/attach-copied-installer.sh \
-  ${newnode_user}@${newnode_host}:${_tmpdir_remote}
-
-#ssh ${newnode_user}@${newnode_host} "(cd ${_dgriddir_remote} ; tar xf ${_tmpdir_remote}/current_node.tar ; tar xf ${_tmpdir_remote}/current_node_dgriddistr.tar )"
-ssh ${newnode_user}@${newnode_host} bash -x ${_tmpdir_remote}/attach-copied-installer.sh ${_dgriddir_remote}
-#ssh ${newnode_user}@${newnode_host} "(cd ${_dgriddir_remote}; sh -x ./dgrid/modules/attach/attach-this-node.sh )"
-
-
-# download and install configs for new node
-msg_echo attach 2  "download and install configs for new node"
-dbg_echo attach 3  "_dgriddir_remote=\"${_dgriddir_remote}\""
-#exit
-_incoming_tmp="${ATTACH_workdir}/new-node-incoming/"
-mkdir ${_incoming_tmp}
-dbg_echo attach 3 "scp -r ${newnode_user}@${newnode_host}:${_dgriddir_remote}/not-in-vcs/attach/thisnode/cfg/* ${_incoming_tmp}"
-scp -r ${newnode_user}@${newnode_host}:${_dgriddir_remote}/not-in-vcs/attach/thisnode/cfg/* ${_incoming_tmp}
-
-set +x
-msg_echo attach 2 ""
-msg_echo attach 2 "-----------"
-
-local _hostcfgfile=`find ${_incoming_tmp} -iname "*.hostinfo"`
-echo _hostcfgfile=${_hostcfgfile}
-if [ -f ${_hostcfgfile} ]; then
-echo "Write CONNECT_dnsname=$newnode_host"
-echo -n
-echo "" >> ${_hostcfgfile}
-echo "CONNECT_dnsname=$newnode_host" >> ${_hostcfgfile}
-fi
-export _incoming_tmp=${_incoming_tmp}
-echo attach_newnode_finish_stage ${_incoming_tmp}
-#pwd
-#exit
-msg_echo attach 2 "Finish stage of node installation."
-attach_newnode_finish_stage ${_incoming_tmp}
+  dbg_echo attach 8 F "end"
 }
 
 
-attach_newnode_finish_stage()
-{
-local _incoming_tmp=$1
-
-echo -n "attach_newnode_finish_stage() pwd=" ; pwd
-set -x
-#echo cp -rvn ${_incoming_tmp}/ ./bynodes/
-cp -rvn ${_incoming_tmp}/* ./bynodes/
-set +x
-
-# register new nodes in system
-local trid=`system_trans_genid`
-local FUNCNAME=attach_newnode_finish_stage
-
-for i in ${_incoming_tmp}/* ; do
-_newcfg=`basename $i`
-echo "new node/host config dir: ${_newcfg}"
-local f=`ls ./bynodes/${_newcfg}/*.nodeconf`
-local f1=`ls ./bynodes/${_newcfg}/*.hostinfo`
-f="$f $f1"
-system_trans_begin $trid system newnodeadd $FUNCNAME
-system_trans_register $trid system newnodeadd $f
-system_trans_end "$trid" system newnodeadd
-
-#system.bash:system_trans_register  $trid system module_enable ${modcfg}.bak
-#system.bash:system_trans_end "$trid" system module_enable
-done
-#exit
+attach_create_nodepack_cli(){
+  dbg_echo attach 5 F start
+  echo "Output in ATTACH_workdir_out=$ATTACH_workdir_out"
+  nodepack_outdir="$ATTACH_workdir_out" attach_create_nodepack2
+  #nodepack_outdir="$DGRIDBASEDIR/" attach_create_nodepack2
+  dbg_echo attach 5 F end
 }
 
-attach_newnode_local()
-{
-local newnodepathdir=$1
+attach_create_nodepack2() {
+  dbg_echo attach 8 F "Begin"
+  if [ -z "$nodepack_outdir" ]; then
+    distr_error "ERROR! nodepack_outdir shoud be set"
+    return 1
+  fi
 
-if [ x$attach_opt_n == x ]; then
-local newnode_namesuffix="one"
-else
-local newnode_namesuffix=$attach_opt_n
-fi
+  mkdir -p ${ATTACH_workdir_out}
+  mkdir -p ${ATTACH_workdir}/tmp1/
+  hg $ATTACH_HGCLONE_PARAMS clone --pull ./ ${ATTACH_workdir}/tmp1/
+  pushd dgrid >/dev/null
+  hg $ATTACH_HGCLONE_PARAMS clone --pull ./ ${ATTACH_workdir}/tmp1/dgrid
+  popd >/dev/null
+  pushd ${ATTACH_workdir}/tmp1/ >/dev/null
+  set -x
+  tar cf ${nodepack_outdir}/current_node.tar ./
+  set +x
+  popd >/dev/null
 
-if [ x$newnodepathdir = "x" ]; then 
-msg_echo attach 1 "Path to new node not set, exiting"
-exit
-fi
-newnodepath="$newnodepathdir/${DGRID_dgridname}"
-msg_echo attach 1 "New local node in \"$newnodepath\""
-attach_create_nodearch
+  echo -n "pwd="
+  pwd
+  #rm -rf ${ATTACH_workdir}/tmp1/
+}
 
-if [ -a "$newnodepath" ]; then
-msg_echo attach 1 "New local node cannot be created in $newnodepath , dir exists"
-exit
-fi
-mkdir -p $newnodepath
-if [ ! -d "$newnodepath" ]; then
-msg_echo attach 1 "cannot create \"$newnodepath\""
-exit
-fi
-
-mkdir -p ${ATTACH_workdir}
-mkdir -p ${ATTACH_workdir}/newnode-local-cfg
-
-
-nodecfg_nodeid_load $THIS_NODEID
-#print_vars `nodeid_vars_all`
-#exit
-
-pushd $newnodepath > /dev/null
-echo -n "pwd="
-pwd
-tar -xf ${ATTACH_workdir}/current_node.tar
-tar -xf ${ATTACH_workdir}/current_node_dgriddistr.tar
-# ok
+attach_newnode_stage__pack2() {
+  # create archives with node files
+  msg_echo attach 2 "create archives with node config and script files, dgrid distribytion"
+  nodepack_outdir="$ATTACH_workdir_out" attach_create_nodepack2
+}
 
 
-# run addthis
-mkdir -p ./not-in-vcs/attach/
-export NODE_ID="$USER@${NODE_HOST}:$newnode_namesuffix"
-export NODE_IDsuffix="$newnode_namesuffix"
-echo -n "pwd="
-pwd
+attach_newnode_stage__vars2() {
+  dbg_echo attach 3 F "start"
+  mkdir -p ${ATTACH_workdir}
+  mkdir -p ${ATTACH_workdir_out}
 
-# inside new node mode
-pushd $DGRIDBASEDIR > /dev/null
-#
+  cp ./dgrid/modules/attach/attach-copied-installer.sh ${ATTACH_workdir_out}/
 
-./dgrid/modules/system/system-runcleanenv-othernode $newnodepath \
-  ./dgrid/modules/dgridsys/dgridsys  module cache_clear
+  attach__savevar DGRID_dgridname ${DGRID_dgridname}
+  generic_listvars NODE_ | sed "s/^/export /g" >> ${ATTACH_workdir_out}/attach.vars
+  
+  INIT_tmpdir_remote_incoming=${NODE_INSTPATH}/${INIT_remote_workdir_rel}
+  INIT_remote_outgoing="${NODE_INSTPATH}/$INIT_remote_outgoing_rel"
+  _dgriddir_remote=${NODE_INSTPATH}/${DGRID_dgridname}
+  #attach__savevar INIT_get_host_ids_outdir ${INIT_remote_workdir_rel}
+  #"./${DGRID_localdir}/attach/thisnode/cfg/"  #${INIT_get_host_ids_outdir}
+  generic_listvars INIT_ | sed "s/^/export /g" >> ${ATTACH_workdir_out}/attach.vars
 
-./dgrid/modules/system/system-runcleanenv-othernode $newnodepath \
-  ./dgrid/modules/dgridsys/dgridsys nodecfg addthis
+  attach__savevar _tmpdir_newnode ${INIT_tmpdir_remote_incoming}
+  attach__savevar _dgriddir_newnode ${_dgriddir_remote}
+}
 
-popd > /dev/null
-popd > /dev/null
 
-cp -r ${newnodepath}/not-in-vcs/attach/thisnode/cfg/*  \
-  ${ATTACH_workdir}/newnode-local-cfg/
 
-attach_newnode_finish_stage ${ATTACH_workdir}/newnode-local-cfg/
+attach_newnode_stage___transfer2() {
+  dbg_echo attach 3 F "start"
+  msg_echo attach 2 "Copy install files to target user@host (${CONNECT_user}@${CONNECT_HOST_id})"
+
+  set -x
+  attach_run ssh ${CONNECT_sshopts2} ${CONNECT_sshopts} ${CONNECT_HOST_id} mkdir -p ${INIT_tmpdir_remote_incoming}
+  attach_run scp ${CONNECT_sshopts2} ${CONNECT_sshopts} ${ATTACH_workdir_out}/* ${CONNECT_HOST_id}:${INIT_tmpdir_remote_incoming}
+  set +x
+}
+
+attach_newnode_stage___initnode2(){
+  set -x
+  #attach_run ssh ${CONNECT_sshopts2} ${CONNECT_sshopts} ${CONNECT_HOST_id} bash -x ${INIT_tmpdir_remote_incoming}/attach-copied-installer.sh ATTACH-RUN
+  attach_run ssh ${CONNECT_sshopts2} ${CONNECT_sshopts} ${CONNECT_HOST_id} bash ${INIT_tmpdir_remote_incoming}/attach-copied-installer.sh ATTACH-RUN 
+  set +x
+
+  # download and install configs for new node
+  msg_echo attach 2 "download and install configs for new node"
+
+  mkdir -p ${_incoming_tmp}
+  #dbg_echo attach 3 
+  #scp -r ${newnode_user}@${newnode_host}:${_dgriddir_remote}/not-in-vcs/attach/thisnode/cfg/* ${_incoming_tmp}
+  set -x
+  attach_run scp ${CONNECT_sshopts2} ${CONNECT_sshopts} ${CONNECT_HOST_id}:${INIT_remote_outgoing}/* ${_incoming_tmp}
+  set +x
+  msg_echo attach 2 ""
+  msg_echo attach 2 "--------------------------------------------------"
 
 }
 
-attach_addthis_run_script()
+
+attach_newnode_stage___finish2(){
+  dbg_echo attach 3 F "start"
+  local ff=${_incoming_tmp}/host_ids.conf
+  if [ x$redeploy == "x1" ]; then 
+    attach_remote_cache_clear
+    dbg_echo attach 3 F "Do not do finish stage in redeploy mode"
+    return 0
+  fi
+
+  # _incoming_tmp need to be set
+  echo "--- ls \${_incoming_tmp} ---"
+  ls ${_incoming_tmp}
+  if [ ! -f "$ff" ]; then
+    distr_error "ERROR! {_incoming_tmp}/host_ids.conf not found!"
+    exit
+  else
+    dbg_echo attach 3 F "OK, host_ids.conf from attach node found"
+  fi
+  cat $ff
+  echo NODE_ID=$NODE_ID
+  echo HOST_id=$HOST_id
+  local nodefile=$(nodecfg_nodeid_cfgfile $NODE_ID)
+  local hostfile=$(hostcfg_hostid_cfgfile $HOST_id)
+  echo nodefile=$nodefile
+  echo hostfile=$hostfile
+  if [ ! -f "$hostfile" ]; then
+    distr_error "ERROR! No hostfile, (\"$hostfile\")  not found!"
+    exit
+  fi
+  # do the thing :D. in future need to do correct merge
+  dbg_echo attach 2 "cat $ff >> $hostfile"
+  cat $ff >> $hostfile
+  dbg_echo attach 2 "Clear cache"
+  attach_remote_cache_clear
+}
+
+attach_remote_cache_clear(){
+  # ssh ${CONNECT_sshopts2} ${CONNECT_sshopts} ${CONNECT_HOST_id} 
+  dbg_echo attach 5 "ssh ${CONNECT_sshopts2} ${CONNECT_sshopts} ${CONNECT_HOST_id} bash ${CONNECT_wdir}/dgrid/modules/dgridsys/dgridsys module cache_clear"
+  attach_run ssh ${CONNECT_sshopts2} ${CONNECT_sshopts} ${CONNECT_HOST_id} bash ${CONNECT_wdir}/dgrid/modules/dgridsys/dgridsys module cache_clear
+}
+
+
+
+
+attach_deploy_cli(){
+  attach_node_mode2 $@
+}
+
+attach_redeploy_cli(){
+  attach_node_mode2 $@ redeploy=1
+}
+
+
+attach_node_mode2()
 {
-#echo "params=$*"
-local _cfgdir=$1
-#echo THIS_NODEID="$THIS_NODEID"
-#echo THIS_HOST=$THIS_HOST
-echo _cfgdir=${_cfgdir}
+  dbg_echo attach 3 F "start"
+  local newnode_id=$1
+  if nodecfg_nodeid_exists $newnode_id; then
+    dbg_echo attach 5 F "Ok, $newnode_id exists"
+  else
+    msg_echo attach 1 "Need existing (empty) node to attach installation to"
+    return 1 
+  fi
+
+  local paramslist="exit_p redeploy"
+  shift 1
+  local parsed=$(pref="" keys="$paramslist" distr_params_keyval_all $*)
+  eval "$parsed" # load params
+  unset parsed paramslist
+
+  nodecfg_nodeid_load $newnode_id
+  eval `pref="local " run_connect_config $newnode_id`
+  dbg_generic_listvars attach 8 "CONNECT_" 1>&2
+  dbg_generic_listvars attach 8 "HOST_" 1>&2
+  dbg_generic_listvars attach 8 "NODE_" 1>&2
+  
+  msg_echo attach 2 "-------------- Vars stage ---------------"
+  attach_newnode_stage__vars2
+  msg_echo attach 2 "-------------- Pack stage ---------------"
+  attach_newnode_stage__pack2
+
+  if [ x$exit_stage == "xbefore_transfer" ]; then
+    msg_echo attach 1 "Do exit_stage=before_transfer, exiting"
+    exit
+  fi
+  msg_echo attach 2 "-------------- Transfer stage ---------------"
+  attach_newnode_stage___transfer2
+
+  if [ x$exit_stage == "xbefore_initnode" ]; then
+    msg_echo attach 1 "Do exit_stage=before__initnode, exiting"
+    exit
+  fi
+
+  local _incoming_tmp="${ATTACH_workdir}/new-node-incoming/"
+
+  msg_echo attach 2 "-------------- Init node stage ---------------"
+  attach_newnode_stage___initnode2
+
+  if [ x$exit_stage == "xbefore_finishnode" ]; then
+    msg_echo attach 1 "Do exit_stage=before_finishnode, exiting"
+    exit
+  fi
+
+  msg_echo attach 2 "-------------- Finish stage ---------------"
+  # do integration of node with main nodecfg repo
+  attach_newnode_stage___finish2
+
+  msg_echo attach 2 "------------------------ attach END -----------------------"
+  dbg_echo attach 3 F "end"
+}
+
+attach_newnode_local() {
+  local newnodepathdir=$1
+
+  if [ x$attach_opt_n == x ]; then
+    local newnode_namesuffix="one"
+  else
+    local newnode_namesuffix=$attach_opt_n
+  fi
+
+  if [ x$newnodepathdir = "x" ]; then
+    msg_echo attach 1 "Path to new node not set, exiting"
+    exit
+  fi
+  newnodepath="$newnodepathdir/${DGRID_dgridname}"
+  msg_echo attach 1 "New local node in \"$newnodepath\""
+  attach_create_nodepack
+
+  if [ -a "$newnodepath" ]; then
+    msg_echo attach 1 "New local node cannot be created in $newnodepath , dir exists"
+    exit
+  fi
+  mkdir -p $newnodepath
+  if [ ! -d "$newnodepath" ]; then
+    msg_echo attach 1 "cannot create \"$newnodepath\""
+    exit
+  fi
+
+  mkdir -p ${ATTACH_workdir}
+  mkdir -p ${ATTACH_workdir}/newnode-local-cfg
+
+  nodecfg_nodeid_load $THIS_NODEID
+  #print_vars `nodeid_vars_all`
+  #exit
+
+  pushd $newnodepath >/dev/null
+  echo -n "pwd="
+  pwd
+  tar -xf ${ATTACH_workdir}/current_node.tar
+  tar -xf ${ATTACH_workdir}/current_node_dgriddistr.tar
+  # ok
+
+  # run addthis
+  mkdir -p ./not-in-vcs/attach/
+  export NODE_ID="$USER@${NODE_HOST}:$newnode_namesuffix"
+  export NODE_IDsuffix="$newnode_namesuffix"
+  echo -n "pwd="
+  pwd
+
+  # inside new node mode
+  pushd $DGRIDBASEDIR >/dev/null
+  #
+
+  ./dgrid/modules/system/system-runcleanenv-othernode $newnodepath \
+    ./dgrid/modules/dgridsys/dgridsys module cache_clear
+
+  ./dgrid/modules/system/system-runcleanenv-othernode $newnodepath \
+    ./dgrid/modules/dgridsys/dgridsys nodecfg addthis
+
+  popd >/dev/null
+  popd >/dev/null
+
+  cp -r ${newnodepath}/not-in-vcs/attach/thisnode/cfg/* \
+    ${ATTACH_workdir}/newnode-local-cfg/
+
+  attach_newnode_finish_stage ${ATTACH_workdir}/newnode-local-cfg/
 
 }
+
 ############                  ################
 
-attach_newnode_local_cmd()
-{
-
-export attach_newnodestr=$1
-attach_parse_getopt $*
-attach_newnode_local $*
+attach_newnode_local_cmd() {
+  export attach_newnodestr=$1
+  #attach_parse_getopt $*
+  attach_newnode_local $*
 }
 
-attach_newnode_cmd()
-{
-export attach_newnodestr=$1
-#shift 1 #echo "#$*#"
-attach_parse_getopt $*
-#echo attach_opt_n=$attach_opt_n
-attach_newnode $*
+attach_newnode_cli() {
+  local attach_newnodestr=$1
+  shift 1
+  #attach_parse_getopt $*
+  #echo attach_opt_n=$attach_opt_n
+  dbg_echo attach 5 F *=$*
+  attach_newnode $attach_newnodestr $*
 }
+
+attach_create_empty_cli(){
+  dbg_echo attach 5 F start
+}
+
+
 ############ cli integration  ################
 
-attach_cli_help()
-{
-#dgridsys_s;echo "attach CMDONE - <xxx> <yyy> .... -"
-dgridsys_s;echo "attach newnode  <user>@<host>:<path> [-n <id>] - create&attach new node form host <host>"
-dgridsys_s;echo "attach newnode-local <path-to-node> [-n <id>]- attach newnode in same user on same host"
-dgridsys_s;echo "	-n <id>  - additional id to distiguish nodes in one user on one host   "
-dgridsys_s;echo "attach newnode-samehost-interuser"
+attach_cli_help() {
+  dgridsys_s; echo "attach create-empty  <nodepath> - create empty node with NODE_f_attach_mode=1 "
+  dgridsys_s; echo "attach newnode  <nodepath> - create&attach new node from host <host>"
+  dgridsys_s; echo "                <nodepath> -  <user>@<host>:<suffix>/path"
+  dgridsys_s; echo "attach enable [hostid|nodeid] - set flag to allow \"attach\" fo this node"
+  dgridsys_s; echo "attach disable [hostid|nodeid] - unset flag allowing \"attach\" module"
+  dgridsys_s; echo "attach check [nodeid] - check if attach possible"
+  dgridsys_s; echo "attach deploy [nodeid] - deploy installation"
+  dgridsys_s; echo "attach redeploy [nodeid] - re-deploy installation"
+  dgridsys_s; echo "attach create-nodepack - create tarball of new node from current node"
+#  dgridsys_s; echo "attach newnode-local <path-to-node> - attach newnode in same user on same host"
+#  dgridsys_s; echo "	-n <id>  - additional id to distiguish nodes in one user on one host   "
 }
 
-attach_parse_getopt()
-{
-echo "attach_parse_getopt()"
-shift 1
-#echo "params=$*"
+attach_cli_run() {
+  maincmd=$1
+  cmd=$2
+  name=$3
 
-while getopts ":n:" opt; do
-  case $opt in
-    n)
-      #echo "-n was triggered, Parameter: $OPTARG" >&2
-      export attach_opt_n=$OPTARG
-      ;;
-    \?)
-      echo "Invalid option: -$OPTARG" >&2
-      exit 1
-      ;;
-    :)
-      echo "Option -$OPTARG requires an argument." >&2
-      exit 1
-      ;;
-  esac
-done
+  dbg_echo attach 5 x${maincmd} == x"attach"
+  if [ ! x${maincmd} == x"attach" ]; then
+    return
+  fi
 
-}
+  if [ x${cmd} == x"" ]; then
+    attach_cli_help
+    return
+  fi
 
+  if [ x${cmd} == x"create-nodepack" ]; then
+    echo -n
+    shift 2
+    attach_create_nodepack_cli $*
+    return
+  fi
 
-attach_cli_run()
-{
-maincmd=$1
-cmd=$2
-name=$3
+  if [ x${name} == x"" ]; then
+    echo "Path to new node not set: dgridsys attach <cmd> <path>"
+    return
+  fi
 
-dbg_echo attach 5  x${maincmd} == x"attach"
-if [ x${maincmd} == x"attach"  ]; then
-echo -n
-else
-return
-fi
+  if [ x${cmd} == x"create-empty" ]; then
+    shift 2
+    attach_create_empty_cli $*
+    return
+  fi
 
-if [ x${cmd} == x""  ]; then
-echo -n
-attach_cli_help
-fi
+  if [ x${cmd} == x"newnode" ]; then
+    shift 2
+    attach_newnode_cli $*
+    return
+  fi
 
-if [ x${name} == x""  ]; then
-echo -n
-echo "Path to new node not set: dgridsys attach <cmd> <path>"
-fi
+  if [ x${cmd} == x"check" ]; then
+    shift 2
+    attach_check_cli $*
+    return
+  fi
 
+  if [ x${cmd} == x"deploy" ]; then
+    shift 2
+    attach_deploy_cli $*
+    return
+  fi
 
-if [ x${cmd} == x"newnode"  ]; then
-echo -n
-shift 2
-attach_newnode_cmd $*
-fi
-
-if [ x${cmd} == x"newnode-local"  ]; then
-echo -n
-shift 2
-attach_newnode_local_cmd $*
-fi
-
-if [ x${cmd} == x"addthis-run-script"  ]; then
-echo -n
-echo --------------------------------------
-shift 2
-attach_addthis_run_script $*
-fi
+  if [ x${cmd} == x"redeploy" ]; then
+    shift 2
+    attach_redeploy_cli $*
+    return
+  fi
 
 
-if [ x${cmd} == x"newnode-xxx"  ]; then
-echo -n
-attach_CMDONE $*
-fi
-
-
-
-#if [ x${cmd} == x"CMDTWO"  ]; then
-#echo -n
-#attach_CMDTWO $*
-#fi
-
+#  if [ x${cmd} == x"newnode-local" ]; then
+#    echo -n
+#    shift 2
+#    attach_newnode_local_cmd $*
+#    return
+#  fi
 
 }
-

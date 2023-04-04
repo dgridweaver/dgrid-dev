@@ -13,17 +13,14 @@ run_nodecmd() { # [API] INTERFACE
     exit
   fi
 
-  local p
+  local p snp_params
   local rmtid=$(_n_get_nodeid $1)
   local c_p=$(_n_get_profile $1)
-  if [ x$rmtid == x$c_p ]; then
-    unset c_p
-  fi
 
   shift 1
   local params=$*
   export __snippet_params="$*"
-  run_rmt_snippet "nodecmd" snp_remoteid="${rmtid}" snp_connect_profile="${c_p}" snp_params="$params"
+  snp_params="$params" run_rmt_snippet "nodecmd" snp_remoteid="${rmtid}" snp_connect_profile="${c_p}" 
 }
 
 run_nodecmdshell() { # [API] INTERFACE
@@ -112,7 +109,7 @@ run_connect_config() { # [API] #usage run_connect_config [entityid] pref="local 
     while read str; do
       #if [[ "$str" =~ "^DRY" ]]; then echo "#111"; continue; fi
       #if [[ "$str" =~ "^----" ]]; then echo "#111"; continue; fi
-      echo "${pref} ${str}"
+      echo "${pref}${str}"
     done
   return 0
 }
@@ -194,7 +191,8 @@ run_rmt_snippet() {
   if [ x"$snp_remoteid_type" == x"hostid" ]; then
     export CONNECT_remoteid="${rmt_HOST_id}"
   fi
-
+  local CONNECT_HOST_id="${rmt_HOST_id}"
+  local CONNECT_NODE_ID="${rmt_NODE_ID}"
 
   dbg_echo run 4 this_NODE_INSTPATH=$this_NODE_INSTPATH
 
@@ -268,7 +266,11 @@ $rmt_CONNECT_sshopts $rmt_HOST_sshopts"
     CONNECT_sshopts2="$CONNECT_sshopts2 -l $CONNECT_user "
   fi
   CONNECT_sshopts2="$CONNECT_sshopts2 -o hostname=$CONNECT_dnsname "
-  CONNECT_sshopts2="$CONNECT_sshopts2 -o HostKeyAlias=$CONNECT_remoteid "
+  if [ x"$CONNECT_hostkeyalias_nodeid" == x1 ]; then
+    CONNECT_sshopts2="$CONNECT_sshopts2 -o HostKeyAlias=$CONNECT_remoteid "
+  else
+    CONNECT_sshopts2="$CONNECT_sshopts2 -o HostKeyAlias=$CONNECT_HOST_id "
+  fi
   CONNECT_sshopts2=$(generic_trim "$CONNECT_sshopts2")
 
   dbg_generic_listvars run 4 "CONNECT" 1>&2
@@ -375,12 +377,14 @@ run_rmt_snippet_do_std_ssh() {
   local vars var1 r_cmd
   local snp_type=$1
   shift 1
-  eval "local $*"
+  dbg_echo run 2 "F Start: \$*=\"$*\" "
+  if [ -n "$*" ]; then eval "local $*"; fi
+  
   local _remoteid=$snp_remoteid
   local params=${snp_params}
-  dbg_echo run 2 "F _remoteid=${_remoteid} \$*=$* ================ begin"
-  dbg_generic_listvars run 2 "snp_" 1>&2
-  dbg_generic_listvars run 2 "CONNECT" 1>&2
+  dbg_echo run 2 "F _remoteid=${_remoteid} ================"
+  dbg_generic_listvars run 4 "snp_" 1>&2
+  dbg_generic_listvars run 4 "CONNECT" 1>&2
   dbg_echo run 2 "F ================ end"
   #local CONNECT_remoteid="${_remoteid}"
 

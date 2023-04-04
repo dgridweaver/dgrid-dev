@@ -131,7 +131,7 @@ sshenv_install_id_cli() {
   eval "$parsed" # load params
   unset parsed paramslist
   
-  eval local `run_connect_config $eid`;
+  eval `pref="local " run_connect_config $eid`;
 
   if [ x$use_pubkey == x"yes" ]; then
     dbg_echo sshenv 2 "use_pubkey=yes, use deafult PubkeyAuthentication"

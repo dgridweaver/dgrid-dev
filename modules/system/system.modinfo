@@ -3,5 +3,5 @@ description="system like things"
 group=core
 depend=bashengine
 core="1.x"
-version="1.x-0.4"
+version="1.x-0.5"
 distribution_mode="1"

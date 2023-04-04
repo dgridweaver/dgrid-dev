@@ -3,4 +3,4 @@ description="helper for developers"
 group=base
 modtypes="bashscripts"
 core="1.x"
-version="1.x-0.3"
+version="1.x-0.4"
