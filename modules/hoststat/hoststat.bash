@@ -27,12 +27,13 @@ hoststat_envset_start()
 {
 # set configure variables that used DGRID_dir_nodelocal
 
-export HOSTSTAT_WDIR="${DGRID_dir_nodelocal}hoststat/"
-export HOSTSTAT_WDIR_tmp="${DGRID_dir_nodelocal}hoststat/tmp/"
-export HOSTSTAT_state_dir="${GRIDBASEDIR}/not-in-vcs/hoststat/stat/"
-echo "export HOSTSTAT_WDIR=\"${DGRID_dir_nodelocal}hoststat/\""
-echo "export HOSTSTAT_WDIR_tmp=${DGRID_dir_nodelocal}hoststat/tmp/"
-echo "export HOSTSTAT_state_dir=${GRIDBASEDIR}/not-in-vcs/hoststat/stat/"
+export HOSTSTAT_WDIR="${DGRID_dir_nodelocal}/hoststat/"
+export HOSTSTAT_WDIR_tmp="${DGRID_dir_nodelocal}/hoststat/tmp/"
+#export HOSTSTAT_state_dir="${GRIDBASEDIR}/not-in-vcs/hoststat/stat/"
+export HOSTSTAT_state_dir="${DGRID_dir_nodelocal}/hoststat/stat/"
+echo "export HOSTSTAT_WDIR=\"${HOSTSTAT_WDIR}\""
+echo "export HOSTSTAT_WDIR_tmp=${HOSTSTAT_WDIR_tmp}"
+echo "export HOSTSTAT_state_dir=${HOSTSTAT_state_dir}"
 }
 
 # define hook

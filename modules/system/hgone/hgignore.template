@@ -4,8 +4,7 @@ syntax: glob
 syntax: regexp 
 ^logs
 ^not-in-vcs
-^bystars/this-install.conf(.*)
+^local
 ^dgrid-site/etc/this-install.conf
+^var
 
-syntax: regexp 
-^dynamicdata(.*)

@@ -34,7 +34,7 @@ function imgpack_util_mkdir_p {
 imgpack_src_download() {
   local suff
   local _file
-  _file="$imgpack_cache_this/$imgpack_src_file0"
+  _file="$imgpack_incoming_cache/$imgpack_src_file0"
   
   echo "Test if file already downloaded(cached): ${_file}"
   if [ ! -f ${_file} ]; then

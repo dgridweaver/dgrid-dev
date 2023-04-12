@@ -133,3 +133,49 @@ system_srvremote_exec_function() { # exec func from "network"
 system_timestamp_dirname() {
   date +%Y%d-%H%M-%s
 }
+
+
+############ system_f_cleanenv  ##################
+
+function system_clear_list_vars_pref {
+  echo DGRID MODINFO MODULE cache $MODULE_list_enabled
+}
+
+system_clear_list_vars_item() {
+  for i in ${ARRAY[0]}; do
+    echo -n "unset $i ; "
+  done
+}
+
+function system_clear_list_vars {
+  for pref in $(system_clear_list_vars_pref); do
+    ( set -o posix; set ) | grep -i ^$pref | split_iterate_stream system_clear_list_vars_item "="
+  done
+}
+
+system_f_cleanenv_do() { #
+  pushd $DGRIDBASEDIR >/dev/null
+  local cmd="$1" bashcmd="bash -l"
+  shift 1
+  [ -z "$cmd" ] && distr_error "$cmd notfound" && exit
+
+  # clear all dgrid variables
+  eval $(system_clear_list_vars)
+  #( set -o posix ; set ) #exit
+  $bashcmd -c "$cmd $*"
+
+  popd >/dev/null
+}
+
+system_f_cleanenv() { # [API] [RECOMENDED]
+  pushd $DGRIDBASEDIR >/dev/null
+  ./dgrid/modules/system/system-runcleanenv $*
+  popd >/dev/null
+}
+
+#####################################
+
+
+
+
+

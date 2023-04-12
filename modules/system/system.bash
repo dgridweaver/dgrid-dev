@@ -11,12 +11,9 @@ if [ x$MODINFO_loaded_system == "x" ]; then
 else
   return
 fi
-
-#MODINFO_dbg_system=0
-MODINFO_msg_system=1
+MODINFO_msg_system=2
 
 source ${MODINFO_modpath_system}/patchwork.bash
-source ${MODINFO_modpath_system}/patchwork2.bash
 
 source ${MODINFO_modpath_system}/generic-code.bash
 source ${MODINFO_modpath_system}/system_installable.bash
@@ -52,17 +49,20 @@ msg_echo() {
 dgrid_dir_variables_set() {
   DGRID_dirname="${USER}_${DGRID_dgridname}_${DGRIDBASEDIR//\//_}"
   echo "export DGRID_dirname=\"$DGRID_dirname\" ;"
-  DGRID_dir_dotlocal="$HOME/.local/${DGRID_dirname}/"
+  DGRID_dir_dotlocal="$HOME/.local/share/dgrid-${DGRID_dirname}"
   echo "export DGRID_dir_dotlocal=\"$DGRID_dir_dotlocal\" ;"
 
-  DGRID_dir_dotconfig="$HOME/.config/${DGRID_dirname}/"
+  DGRID_dir_dotconfig="$HOME/.config/${DGRID_dirname}"
   echo "export DGRID_dir_dotconfig=\"$DGRID_dir_dotconfig\" ;"
 
-  DGRID_dir_dotcache="$HOME/.cache/${DGRID_dirname}/"
+  DGRID_dir_dotcache="$HOME/.cache/${DGRID_dirname}"
   echo "export DGRID_dir_dotcache=\"$DGRID_dir_dotcache\" ;"
 
-  DGRID_dir_nodelocal="$DGRIDBASEDIR/not-in-vcs/"
+  DGRID_dir_nodelocal="$DGRIDBASEDIR/not-in-vcs"
   echo "export DGRID_dir_nodelocal=\"$DGRID_dir_nodelocal\" ;"
+  
+  DGRID_dir_memory=`dirname $cache_path`
+  echo "export DGRID_dir_memory=\"$DGRID_dir_memory\" ;"
 
 }
 

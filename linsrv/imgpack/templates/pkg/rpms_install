@@ -1,0 +1,18 @@
+#!/bin/bash
+
+mkdir -p $imgpack_unpack_workdir
+
+echo imgpack_incoming_cache=$imgpack_incoming_cache
+echo imgpack_unpack_workdir=$imgpack_unpack_workdir
+echo imgpack_cache_result=$imgpack_cache_result
+mkdir -p $imgpack_cache_result
+
+#PP=`ls ${P}*.rpm|head -n 1`
+PP=$imgpack_src_file0
+T=$imgpack_cache_result
+pushd $T  > /dev/null
+set -x
+#rpm2cpio $imgpack_incoming_cache/$PP | cpio -t
+rpm2cpio $imgpack_incoming_cache/$PP | cpio -idv
+set +x
+popd > /dev/null

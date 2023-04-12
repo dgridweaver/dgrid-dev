@@ -1,3 +1,16 @@
+
+Wed 12 Apr 2023 06:45:11 PM +04
+
+dgrid-1.9
+
+updnode - hg+sshfs push update
+nodecfg - cfg loading cleanup
+sshenv - sshfs working
+
+Tue 11 Apr 2023 06:33:46 PM +04
+
+sshenv 1.x-0.4 - ssh-dg works
+
 Wed 05 Apr 2023 01:05:08 AM +04
 dgrid-1.8
 

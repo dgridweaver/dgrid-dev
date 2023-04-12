@@ -21,41 +21,47 @@ cfgstack_load_byid() { # [API] [RECOMENDED]
   local cmd cfgfile _nodeid
   cfgfile=$1
   _nodeid=$2
-  cfgstack_cfg_op $cfgfile ${_nodeid} op="load"
+  shift 2
+  cfgstack_cfg_op $cfgfile ${_nodeid} op="load" $*
 }
 ################################################################
 
 ################################################################
-# cfgstack_cfg_op etc/someconfig.conf $NODE_ID op=load|trace
+# cfgstack_cfg_op etc/someconfig.conf $NODE_ID op=source|load|trace
 ################################################################
 cfgstack_cfg_op() { # [API]
-  # cmd : trace exports load listfiles
-  local cmd cfgprefix cfgfile nodeid params op
-  cfgfile=$1
-  nodeid=$2
-  entityid=$2
+  # cmd : trace load filenames source
+  local cmd cfgprefix params op var
+  local cfgfile=$1 nodeid=$2 entityid=$2
   shift 2
   params="$*"
-  dbg_echo cfgstack 5 F "params=\"$params\""
-  eval $params
-  cfgprefix="UNKNOWN"
+  dbg_echo cfgstack 5 F "Start params=\"$params\""
+
+  #cfgprefix="UNKNOWN"
+  [ -n "$params" ]  && eval "local $params"
+  [ -z "$op" ] && op="load"
 
   cmd=$op
-
   pushd $DGRIDBASEDIR >/dev/null
 
   var=$(cfgstack_search_dir_list $entityid)
-  eval $var
+  eval $var 
   unset var
-
+  dbg_echo cfgstack 5 F "op=\"$op\" prefix=\"$prefix\" cfgprefix=\"$cfgprefix\""
   dbg_echo cfgstack 5 F "dir list to check=$CFGSTACK_search_dir_list"
   cfgstack_msg_trace $cmd
   for _dir in $CFGSTACK_search_dir_list; do
     ############cfgstack_msg_trace $cmd
     cfgstack_msg_trace $cmd -n "Check config : "
     cfg=${_dir}/$cfgfile
-    #############echo cfgstack_cfg_one $cmd $cfgprefix $cfg
-    cfgstack_cfg_one $cmd $cfgprefix $cfg
+    ############# cfgstack_cfg_one cmd=$cmd cfgprefix=$cfgprefix cfg=$cfg
+    if [ x"$op" == x"source" -o x"$op" == x"trace" -o x"$op" == x"stdout" -o x"$op" == x"filenames"  ]; then
+      cfgstack_cfg_one $cfg
+    fi
+    if [ x"$op" == x"load"  ]; then
+      var=$( cfgstack_cfg_one $cfg )
+      eval $var
+    fi
   done
   cfgstack_msg_trace $cmd
   popd >/dev/null
@@ -64,19 +70,87 @@ cfgstack_cfg_op() { # [API]
 
 #############################
 
-cfgstack_loadshellcfg() {
-  cfgprefix=$1
-  cfg=$2
 
-  source $cfg
+cfgstack_cfg_one() {
+  # cmd= cfgprefix= # inherit
+  local var cfg=$1
+  dbg_echo cfgstack 5 F "cmd=$cmd cfgprefix=$cfgprefix cfg=$cfg"
+
+  if [ x"$op" == x"trace" ]; then
+    if [ -f $cfg ]; then
+      cfgstack_msgprintf_trace $cmd "%8s%2s" "[FOUND] "
+    else
+      cfgstack_msgprintf_trace $cmd "%8s%2s" "[_not_] "
+    fi
+    cfgstack_msg_trace $cmd "$cfg  ."
+    return 0
+  fi
+
+  if [ -f $cfg ]; then
+    # load config if needed
+    if [ x$cmd == x"source" ]; then
+      dbg_echo cfgstack 4 F " source $cfg"
+      source $cfg
+      return 0
+    fi
+    if [ x$cmd == x"filenames" ]; then
+      echo $cfg
+    fi
+    if [ x$cmd == x"stdout" -o x$cmd == x"load" ]; then
+      dbg_echo cfgstack 4 F " cfgstack_load_stdout $cfg"
+      cfgstack_load_stdout $cfg  # inherit $cfgprefix
+      return 0
+    fi
+    dbg_echo cfgstack 4 F "cmd=\"$cmd\" not found"
+    return 1
+  else
+    return 1
+  fi
 }
 
-cfgstack_load_exports() {
-  local cfg cfgprefix
-  cfgprefix=$1
-  cfg=$2
-  cat $cfg | grep "^$cfgprefix"
+######################
+
+_cfgstack_filtercfg1() {
+  local s p0 p1
+  while read s; do
+    #echo "sssss $prefix $s"
+    p0=$(generic_cut_param "=" 1 "$s")
+    p1=$(generic_cut_param "=" 2 "$s")
+    if [ -z "$p0" ]; then continue; fi
+    if [[ ! "$p0" =~ ^[[:alnum:]_]+$  ]]; then continue; fi
+    echo "${prefix}$p0=$p1"
+  done
 }
+
+#cfgstack_loadshellcfg() {
+#  local cfgprefix=$1 var
+#  local cfg=$2
+#  cat $cfg | _cfgstack_filtercfg1
+#}
+
+
+cfgstack_load_stdout() {
+  local cfg=$1
+  cat $cfg | _cfgstack_filtercfg1
+}
+
+#    p0=$(generic_cut_param "=" 1 "$s")
+#    p1=$(generic_cut_param "=" 2 "$s")
+#    if [ -z "$p0" ]; then continue; fi
+#    if [ -z "$p1" ]; then continue; fi
+#    if [[ ! "$p0" =~ ^[[:alnum:]_]+$  ]]; then continue; fi
+#    local r="\"\'\`"
+#    if [[ "$p1" =~ $r  ]]; then continue; fi
+#    if [ -n "$keys" ]; then
+#      if generic_word_in_list $p0 $keys; then
+#        echo "${pref}${p0}=\"$p1\";"
+#      fi
+#    else
+#      echo "${pref}${p0}=\"$p1\";"
+#    fi
+  #| grep "^$cfgprefix"
+
+
 
 cfgstack_msg_trace() {
   cmd=$1
@@ -94,36 +168,6 @@ cfgstack_msgprintf_trace() {
   fi
 }
 
-cfgstack_cfg_one() {
-  cmd=$1
-  cfgprefix=$2
-  cfg=$3
-
-  if [ -f $cfg ]; then
-    cfgstack_msgprintf_trace $cmd "%8s%2s" "[FOUND] "
-  else
-    cfgstack_msgprintf_trace $cmd "%8s%2s" "[_not_] "
-  fi
-
-  cfgstack_msg_trace $cmd "$cfg  ."
-
-  if [ -f $cfg ]; then
-    # load config if needed
-    if [ x$cmd == x"load" ]; then
-      dbg_echo cfgstack 1 [2] "cfgstack_cfg_one(): cfgstack_loadshellcfg $cfgprefix $cfg"
-      cfgstack_loadshellcfg $cfgprefix $cfg
-    fi
-
-    if [ x$cmd == x"exports" ]; then
-      dbg_echo cfgstack 1 [2] "cfgstack_cfg_one():cfgstack_load_exports $cfgprefix $cfg"
-      cfgstack_load_exports $cfgprefix $cfg
-    fi
-
-    return 0
-  else
-    return 1
-  fi
-}
 
 ##########################
 

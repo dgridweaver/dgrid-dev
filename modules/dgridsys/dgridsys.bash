@@ -37,19 +37,16 @@ source ${MODINFO_modpath_dgridsys}/module.inc.sh
 source ${MODINFO_modpath_dgridsys}/nodecfg.inc.sh
 source ${MODINFO_modpath_dgridsys}/cfgfiles.inc.sh
 source ${MODINFO_modpath_dgridsys}/status.inc.sh
+source ${MODINFO_modpath_dgridsys}/runtime.inc.sh
 
 dgridsys_f() { # [API] [RECOMENDED]
-  #echo -n
-  #pushd $DGRIDBASEDIR > /dev/null
-  #./dgrid/modules/dgridsys/dgridsys $*
-  #popd > /dev/null
-  dgridsys_f_cleanenv $*
+  dgridsys_f_cleanenv $@
 }
 
 dgridsys_f_cleanenv() { # [API] [RECOMENDED]
   pushd $DGRIDBASEDIR >/dev/null
   #( set -o posix ; set ) #exit
-  system_f_cleanenv ./dgrid/modules/dgridsys/dgridsys $*
+  system_f_cleanenv ./dgrid/modules/dgridsys/dgridsys $@
   popd >/dev/null
 }
 
@@ -61,6 +58,7 @@ dgridsys_cli_help_helpsys() {
 dgridsys_cli_help() {
   dgridsys_cli_help_helpsys
   dgridsys_cli_help_module
+  dgridsys_cli_help_runtime
   dgridsys_cli_help_nodecfg
   dgridsys_cli_help_cfgfiles
   dgridsys_cli_help_status
@@ -113,7 +111,7 @@ dgridsys_cli_run() {
     return
   fi
 
-  dbg_echo dgridsys 5 x${maincmd} == x"module"
+  dbg_echo dgridsys 5 x${maincmd} == x"help"
   if [ x${maincmd} == x"help" ]; then
     dgridsys_cli_helpsys $*
     return
@@ -129,6 +127,13 @@ dgridsys_cli_run() {
     dgridsys_cli_status $*
     return
   fi
+
+  if [ x${maincmd} == x"runtime" ]; then
+    dgridsys_cli_runtime $*
+    return
+  fi
+
+
 
   ###### misc ########
 

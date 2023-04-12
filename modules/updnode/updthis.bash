@@ -8,7 +8,7 @@ updthis_set_vars_for_nodeid() {
     distr_error "==> ERROR! \$1 (nodeid) of function should be not empty"
     exit
   fi
-  cfgstack_load_byid etc/updnode.conf $nodeid
+  cfgstack_load_byid etc/updnode.conf $nodeid op=stdout
 
   export UPDTHIS_UPD_NODEID=$UPDNODE_uplink_nodeid
   if [ ! x$UPDNODE_uplink_nodeid == "x" ]; then
@@ -103,7 +103,7 @@ updthis_cli_run() {
   local name=$3
   local cmd_found="0"
 
-  dbg_echo updnode 5 x${maincmd} == x"updthis"
+  dbg_echo updnode 5 F x${maincmd} == x"updthis"
   if [ ! x${maincmd} == x"updthis" ]; then
     return
   fi

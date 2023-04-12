@@ -16,15 +16,31 @@ source ${MODINFO_modpath_distr}/distr_nodecfg.bash
 #  local var="$1";printf %s\\n "$var";}
 
 distr_error(){
-echo -n `pwd`"/${BASH_SOURCE[1]} "": " 1>&2
-echo -n "${FUNCNAME[1]}() : " 1>&2
-echo -n $* 1>&2
-echo
+  echo -n `pwd`"/${BASH_SOURCE[1]} "": " 1>&2
+  echo -n "${FUNCNAME[1]}() : " 1>&2
+  echo -n $* 1>&2
+  echo
 }
 distr_error_echo(){
-echo -n $* 1>&2
-echo
+  echo -n $* 1>&2
+  echo
 }
+
+generic_remove_word_from_list() { # [API]
+  set -f
+  IFS=' '
+  local s=$2 w=$1 arg
+
+  set -- $s
+  shift 1
+  for arg do
+    shift
+    [ "$arg" = "$w" ] && continue
+    set -- "$@" "$arg"
+  done
+  printf '%s\n' "$*"
+}
+
 
 generic_word_prefix() { # [API]
   local p=$1
@@ -40,6 +56,21 @@ _distr_mkdir() {
   mkdir -p ./$1
   touch ./$1/.keep_me
 }
+
+distr_entityid_cfgdir() { # [API] [RECOMENDED]
+  local vv v _hostid=$1
+  vv=$(nodecfg_varid_from_nodeid ${_hostid})
+  v=NODECFG_hostid_cfgdir_${vv}
+  if [ -n "${!v}" ]; then echo -n ${!v}; return 0; fi
+  v=NODECFG_cfgdir_${vv}
+  #echo NODECFG_nodeid_cfgdir_${vv}
+  if [ -n "${!v}" ]; then
+    echo -n ${!v}
+    return 0
+  fi
+  return 1
+}
+
 
 # use pref="local " run_is_entityid ENTITY_ID
 distr_is_entityid() # [API]
@@ -112,10 +143,10 @@ distr_run_bash_clean() {
   export IFS=","
   for v in $vars; do
     export IFS="$oifs"
-    vl="$vl $v=\"${!v}\" "
+    [ -n "${!v}" ] && vl="$vl $v=\"${!v}\" "
   done
-  echo RUN env -i $vl $bash_cmd $cmds 1>&2
-  env -i $vl $bash_cmd $cmds
+  dbg_echo distr 5 F RUN env -i $vl $bash_cmd -c $cmds
+  env -i $vl $bash_cmd -c "$cmds"
 }
 
 
@@ -225,6 +256,89 @@ distr_cli_runtime_query() {
   distr_runtime_query $*
 }
 
+distr_cli_runtime_list() {
+  dbg_echo distr 5 F "*=$*"
+  distr_runtime_list $*
+}
+
+__distr_runtime_dir_list_found() {
+  local r_id
+  mdirs=$DGRID_RUNTIME_DIRS
+  mdirs=${mdirs/NODEDIR/$DGRIDBASEDIR}
+  mdirs=${mdirs/DISTDIR/$DGRIDDISTDIR}
+  mdirs=${mdirs/HOME/$HOME}
+  dbg_echo runtime 8 "expanded: DGRID_RUNTIME_DIRS=$mdirs"
+  tIFS="$IFS"; IFS=":"
+  dbg_echo runtime 8  "------------"
+  for rtd in $mdirs; do
+    IFS="$tIFS"
+    if [ ! -d "$rtd" ]; then dbg_echo distr 8 F "\"$rtd\" dir not exists."; continue; fi
+    #echo bbbb=`ls $rtd`" "
+    tIFS="$IFS"; IFS=" "
+    echo `ls -1 $rtd`" " | while read -r s; do 
+      rtdir1=$rtd/${s}
+      # check
+      if [ -n "`ls $rtdir1`"  ]; then 
+        r_id=$(generic_cut_param "-" 1 "$s")
+        r_arch=$(generic_cut_param "-" 2 "$s")
+        echo -n "r_id=${r_id} r_dirname=$s r_fulldir=\"$rtdir1\" r_arch=\"$r_arch\""
+        echo
+      fi
+    done
+    IFS="$tIFS"
+  done 
+}
+
+
+distr_runtime_list_configured(){ # [API]
+  local s s1 s2 v
+  generic_listvars RUNTIME_rt_| while read s; do
+    s=$(generic_cut_param "=" 1 $s)
+    if [[ "$s" == "RUNTIME_rt_"*"_name" ]]; then
+      v=${!s}
+      echo -n $v" "
+    fi
+  done
+}
+
+__distr_runtime_dir_list_configued()
+{
+  local r_id
+  for r_id in $(distr_runtime_list_configured) ; do
+    echo "r_id=$r_id r_cfg=1"
+  done
+}
+
+distr_runtime_list() {
+  dbg_echo distr 5 F "*=$*"
+  local mdirs rtd rdlist s runtime_list_configured list1 var vvv
+  
+  runtime_list_configured=$(distr_runtime_list_configured)
+  dbg_echo runtime 5 F DGRID_RUNTIME_DIRS=$DGRID_RUNTIME_DIRS
+  dbg_echo runtime 5 F runtime_list_configured=$runtime_list_configured
+  list1=$runtime_list_configured
+
+  ( __distr_runtime_dir_list_found; __distr_runtime_dir_list_configued  )| \
+  while read var; do
+    unset r_id r_dirname r_arch
+    eval "local $var"
+    vvv=flag_${r_id}
+    if [ x${!vvv} == x1 ]; then continue; fi
+    if [ x${r_arch} == x ]; then r_arch=" - "; fi
+    if generic_word_in_list $r_id $runtime_list_configured;  then
+      printf "%12s | %7s | %9s | %8s\n" $r_id "$r_arch" "CONFIGURED" "$r_dirname"
+      list1=$(generic_remove_word_from_list $r_id $list1)
+    else
+      printf "%12s | %7s | %9s | %8s\n" $r_id "$r_arch" "NOT_CONF" $r_dirname
+    fi
+    local flag_${r_id}=1
+  done
+}
+
+distr_runtime_list_detected() {
+  dbg_echo distr 5 F "*=$*"
+
+}
 
 
 distr_runtime_query() {
@@ -251,6 +365,18 @@ distr_runtime_query() {
 
 ################  interface ###################
 
+distr_vars_simple(){
+  #set|grep ^DGRID
+  generic_listvars DGRID
+  generic_listvars GRID
+  generic_listvars MODINFO_
+  generic_listvars MODULE_
+  generic_listvars RUNTIME_
+  generic_listvars mods_
+  generic_listvars NODECFG_
+}
+
+
 distr_cli_main() {
   dbg_echo distr 5 F Start
   distr_cli_run distr-cmd $*
@@ -267,11 +393,11 @@ distr_cli_help_do() {
   echo "${pref}status - show this installation status"
   echo "${pref}cmds-check   - check/show cmd path"
   echo "${pref}vars   - show system variables"
-  echo "${pref}module-list   - show system variables"
+  echo "${pref}module-list  - list enabled modules"
+  echo "${pref}runtime-list  - list installed runtimes"
   echo "${pref}runtime-which   - \"which\" in runtimes"
   echo "${pref}runtime-query   - query cmd in runtimes"
   echo "${pref}nodecfg-addthis   - call function to create node config (in subdir)"
-#  echo "${pref}nodecfg-addthis-noregister   - call function to create node config (in subdir)"
   echo "${pref}hostcfg-empty-add [new-host-id] - create empty host (config, in subdir)"
   echo "${pref}nodecfg-empty-add [new-node-id] - create empty node (config, in subdir)"
   echo "${pref}nodecfg-subnode-add - add subnode of THIS_... node"
@@ -309,6 +435,7 @@ distr_cli_run() {
   if [ x${cmd} == x"cmds-check" ]; then distr_cli_cmds_check; return $?; fi
   if [ x${cmd} == x"module-list" ]; then distr_cli_modlist; return $?; fi
   if [ x${cmd} == x"vars" ]; then distr_cli_vars; return $?; fi
+  if [ x${cmd} == x"runtime-list" ]; then distr_cli_runtime_list $params; return $?; fi
   if [ x${cmd} == x"runtime-which" ]; then distr_cli_runtime_which $params; return $?; fi
   if [ x${cmd} == x"runtime-query" ]; then distr_cli_runtime_query $params; return $?; fi
   if [ x${cmd} == x"nodecfg-addthis" ]; then distr_nodecfg_addthis_cli $params; return $?; fi

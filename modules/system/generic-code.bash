@@ -131,10 +131,8 @@ print_vars_str() { # [GENERIC] [API]
 ############################################
 
 driverfunction2() {
-  local drv BF
-  BF=$1
-  drv=$2
-  F="${BF}_${drv}"
+  local drv=$2 BF=$1
+  local F="${BF}_${drv}"
   fTST=$(type -t $F)
   if [ x$fTST == x"function" ]; then
     shift 2
@@ -183,8 +181,7 @@ driverfunction2() {
 #getopt support
 
 system_parse_getopt() {
-  dbg_echo system 5 "system_parse_getopt()"
-  #echo "params=$*"
+  dbg_echo system 5 F "params=$*"
   local module=$1
   local params=$2
   if [ x$params == x"" ]; then
@@ -192,8 +189,6 @@ system_parse_getopt() {
     exit
   fi
   shift 2
-  #echo ===============
-  #echo "while getopts $params opt; do"
   while getopts "$params" opt; do
     case $opt in
     \?)

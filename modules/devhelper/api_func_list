@@ -13,8 +13,10 @@ cd `dirname $_file0`
 
 ################## [END] dgrid header1 ################ 
 
-main_exit_if_not_enabled sshenv
+main_exit_if_not_enabled run
 
-#export MODINFO_dbg_sshenv=5
-#export MODINFO_dbg_run=20
-sshenv_ssh $@
+#export MODINFO_dbg_devhelper=4
+dgridsys_f devhelper apilist
+#dgridsys_cli_main devhelper apilist
+#devhelper $*
+

@@ -1,13 +1,13 @@
-#!/bin/bash 
-
+#!/bin/sh
 echo ------ $0 -------
 
-#imgpack_base=
+mkdir -p ${imgpack_incoming_cache}
 
 echo imgpack_incoming_cache=$imgpack_incoming_cache
 ls $imgpack_incoming_cache
 
+
+
 # download into $imgpack_incoming_cache
 imgpack_src_download 0  # $imgpack_src_file0
-
 

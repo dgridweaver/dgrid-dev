@@ -1,4 +1,10 @@
 
+About
+-------------
+
+"imgpack" is a module where all unpack/pacth/repack scripts should be located, 
+including runtime creation.
+
 
 imgpack subdirectories
 --------------
@@ -28,5 +34,25 @@ std/default sequence
 ------------
 
 download ; uncomress ; unpack; patch; pack;
+
+
+vars
+----
+
+imgpack_incoming_cache - dir to download src archives to
+imgpack_unpack_workdir - dir for unpacking and other tmp work
+imgpack_cache_result - dir with results
+
+
+rpms
+----
+###rpm -ivh --relocate /usr=/home/username/usr --relocate /etc=/home/username/etc
+#rpm -ivh --relocate /usr=$USER/usr --relocate /etc=/home/username/etc ./33/$PP
+#rpm --noscripts -ivh --relocate /usr=$T/usr --relocate /etc=$T/etc $imgpack_incoming_cache/$PP
+#rpm --noscripts --badreloc -ivh --prefix=$T $imgpack_incoming_cache/$PP
+#rpm --dbpath $T/rpmdb --noscripts --nodeps --badreloc -ivh --prefix $T $imgpack_incoming_cache/$PP
+
+#rpm --nodeps --dbpath $T/rpmdb --noscripts -ivh --relocate /usr=$T/usr --relocate /etc=$T/etc $imgpack_incoming_cache/$PP
+
 
 

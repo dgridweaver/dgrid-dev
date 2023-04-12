@@ -113,8 +113,10 @@ devhelper_hook_list_info() {
 ###### api #########
 
 _devhelper_api_list_hlp1() {
-  find -not -path ".hg/*" -iname \*.bash -exec grep "\[API\]" \{\} \;
-  #find -not -path ".hg/*" -iname \*.sh -exec grep "\[API\]" \{\} \;
+  dbg_echo devhelper 4 "F start"
+  find ./dgrid -not -path ".hg/*" -iname \*.bash -exec grep "\[API\]" \{\} \;
+  find ./dgrid-site -not -path ".hg/*" -iname \*.bash -exec grep "\[API\]" \{\} \;
+  dbg_echo devhelper 4 "F end"
 }
 
 devhelper_api_list() {

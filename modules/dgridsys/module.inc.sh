@@ -33,13 +33,7 @@ dgridsys_module_register() {
     echo "module name expected"
   fi
   local modn=$1
-  #exit
 
-  #local f=$(ls ./bynodes/${_newcfg}/*.nodeconf)
-  #local f1=$(ls ./bynodes/${_newcfg}/*.hostinfo)
-  #f="$f $f1"
-
-  #local FUNCNAME="dgridsys_module_register"
   f="./etc/modules/${modn}.modconfig"
   system_register_file_changes "module_register" "$FUNCNAME" $f
 }

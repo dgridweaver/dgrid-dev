@@ -18,27 +18,17 @@ cd ${_dir0}
 
 distr_cmd_less()
 {
-echo -n
-if command -v less; then
-less
-else
-cat
-fi
+  if command -v less; then
+    less
+  else
+    cat
+  fi
 }
 
 
-distr_vars_simple()
-{
-set|grep ^DGRID
-set|grep ^GRID
-set|grep ^MODINFO_
-set|grep ^MODULE_
-set|grep ^mods_
-set|grep ^NODECFG_
-}
 
-echo
-echo "#########"
+#echo
+#echo "#########"
 echo
 distr_vars_simple|distr_cmd_less
 echo

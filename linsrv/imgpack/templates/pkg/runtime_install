@@ -1,0 +1,12 @@
+#!/bin/bash
+
+#echo imgpack_incoming_cache=$imgpack_incoming_cache
+#echo imgpack_unpack_workdir=$imgpack_unpack_workdir
+echo imgpack_cache_result=$imgpack_cache_result
+
+
+echo imgpack_runtime=$imgpack_runtime
+
+mkdir -p $DGRIDBASEDIR/runtime/$imgpack_runtime
+cp -ar $imgpack_cache_result/* $DGRIDBASEDIR/runtime/$imgpack_runtime
+

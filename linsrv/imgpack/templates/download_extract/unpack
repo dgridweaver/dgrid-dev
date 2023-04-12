@@ -2,7 +2,7 @@
 
 echo ------ $0 -------
 
-_file="$imgpack_cache_this/$imgpack_src_file0"
+_file="$imgpack_incoming_cache/$imgpack_src_file0"
 imgpack_util_extract "$imgpack_unpack_workdir" ${_file}
 
 

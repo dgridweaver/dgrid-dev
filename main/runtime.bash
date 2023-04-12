@@ -1,5 +1,5 @@
 #!/bin/bash
-# (C)opyright 2022 deltagrid/dgrid project.
+# (C)opyright 2022,2023 deltagrid/dgrid project.
 #
 # main.bash : runtime.bash is a part of main module.
 #
@@ -12,14 +12,9 @@
 
 #####################################
 
-#runtime_check_bin(){
-#local b=$1
-#}
-
 runtime_rt_vars()
 {
-# 
-echo bin dir dirrel ldpreload name pip python 
+  echo bin dir dirrel ldpreload name pip python 
 }
 
 
@@ -35,21 +30,19 @@ lib_runtime_explode_path() {
 
 
 runtime_which() {
-local p; params="p_rt_do=which "
-lib_runtime_run_do_ "$params" $*
+  local p; params="p_rt_do=which "
+  lib_runtime_run_do_ "$params" $*
 }
 
-lib_runtime_run() {
-local p; params="p_rt_do=run "
-lib_runtime_run_do_ "$params" $*
+lib_runtime_run() { # [API]
+  local p; params="p_rt_do=run "
+  lib_runtime_run_do_ "$params" $*
 }
 
-runtime_query() {
-local p; params="p_rt_do=query "
-lib_runtime_run_do_ "$params" $*
+runtime_query() { # [API]
+  local p; params="p_rt_do=query "
+  lib_runtime_run_do_ "$params" $*
 }
-
-#lib_runtime_isvar_eq_1
 
 lib_runtime_run_do_() {
   local v p rt rrt tIFS gcmd g_cmd g_rt
