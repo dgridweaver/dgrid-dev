@@ -1,6 +1,6 @@
 name="dgridsys"
 description="main CLI interface, *important*"
-modtypes="bashscripts"
+engine=bashengine
 core="1.x"
-version="1.x-0.7"
+version="1.x-0.8"
 group=core

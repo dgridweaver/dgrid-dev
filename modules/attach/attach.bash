@@ -165,7 +165,7 @@ attach_newnode_stage___initnode2(){
 
   mkdir -p ${_incoming_tmp}
   #dbg_echo attach 3 
-  #scp -r ${newnode_user}@${newnode_host}:${_dgriddir_remote}/not-in-vcs/attach/thisnode/cfg/* ${_incoming_tmp}
+  #scp -r ${newnode_user}@${newnode_host}:${_dgriddir_remote}/$DGRID_localdir/attach/thisnode/cfg/* ${_incoming_tmp}
   set -x
   attach_run scp ${CONNECT_sshopts2} ${CONNECT_sshopts} ${CONNECT_HOST_id}:${INIT_remote_outgoing}/* ${_incoming_tmp}
   set +x
@@ -329,7 +329,7 @@ attach_newnode_local() {
   # ok
 
   # run addthis
-  mkdir -p ./not-in-vcs/attach/
+  mkdir -p ./$DGRID_localdir/attach/
   export NODE_ID="$USER@${NODE_HOST}:$newnode_namesuffix"
   export NODE_IDsuffix="$newnode_namesuffix"
   echo -n "pwd="
@@ -348,7 +348,7 @@ attach_newnode_local() {
   popd >/dev/null
   popd >/dev/null
 
-  cp -r ${newnodepath}/not-in-vcs/attach/thisnode/cfg/* \
+  cp -r ${newnodepath}/$DGRID_localdir/attach/thisnode/cfg/* \
     ${ATTACH_workdir}/newnode-local-cfg/
 
   attach_newnode_finish_stage ${ATTACH_workdir}/newnode-local-cfg/

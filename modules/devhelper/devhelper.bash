@@ -114,6 +114,9 @@ devhelper_hook_list_info() {
 
 _devhelper_api_list_hlp1() {
   dbg_echo devhelper 4 "F start"
+  find ./dgrid -not -path ".hg/*" -iname \*.sh -exec grep "\[API\]" \{\} \;
+  find ./dgrid-site -not -path ".hg/*" -iname \*.sh -exec grep "\[API\]" \{\} \;
+
   find ./dgrid -not -path ".hg/*" -iname \*.bash -exec grep "\[API\]" \{\} \;
   find ./dgrid-site -not -path ".hg/*" -iname \*.bash -exec grep "\[API\]" \{\} \;
   dbg_echo devhelper 4 "F end"

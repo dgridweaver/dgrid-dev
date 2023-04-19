@@ -214,6 +214,7 @@ distr_cli_status() {
   echo DGRID_f_distribution=$DGRID_f_distribution
   distr_var_print_simple DGRID_f_allow_no_thisnode
   distr_var_print_simple THIS_NODEID
+  distr_var_print_simple THIS_HOSTID
 }
 distr_cli_status_long() {
   distr_cli_status
@@ -363,10 +364,28 @@ distr_runtime_query() {
   #exit
 }
 
+###############################################
+
+distr_cli_cache_clear(){
+  cache_clear ALL
+}
+
+distr_cmd_less()
+{
+  if command -v less; then
+    less
+  else
+    cat
+  fi
+}
+
+
+
 ################  interface ###################
 
 distr_vars_simple(){
   #set|grep ^DGRID
+  generic_listvars THIS
   generic_listvars DGRID
   generic_listvars GRID
   generic_listvars MODINFO_
@@ -390,7 +409,9 @@ distr_cli_help_do "     distr "
 distr_cli_help_do() {
   local pref=$1
   echo -n  
+
   echo "${pref}status - show this installation status"
+  echo "${pref}cc - cache clear ALL"
   echo "${pref}cmds-check   - check/show cmd path"
   echo "${pref}vars   - show system variables"
   echo "${pref}module-list  - list enabled modules"
@@ -432,6 +453,7 @@ distr_cli_run() {
 
 
   if [ x${cmd} == x"status" ]; then distr_cli_status_long; return $?; fi
+  if [ x${cmd} == x"cc" ]; then distr_cli_cache_clear; return $?; fi
   if [ x${cmd} == x"cmds-check" ]; then distr_cli_cmds_check; return $?; fi
   if [ x${cmd} == x"module-list" ]; then distr_cli_modlist; return $?; fi
   if [ x${cmd} == x"vars" ]; then distr_cli_vars; return $?; fi

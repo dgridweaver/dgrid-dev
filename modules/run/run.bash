@@ -100,6 +100,8 @@ generic_check_host_port() { # [API] [GENERIC]
 
 _run_allgrid_nodecmd_hlpr() {
   #echo TTT=$*
+  nodecfg_load_nodeid ${NODE_ID}
+  
   if [ x$hoststat_isup_this_host == "x1" ]; then
     #echo "Node ${NODE_ID} online, run cmd"
     dbg_echo run 4 "run_nodecmd ${NODE_ID} ${_run_params}"
@@ -114,7 +116,7 @@ _run_allgrid_nodecmd_hlpr() {
 run_allgrid_nodecmd() {
   echo -n
   export _run_params=$*
-  nodecfg_iterate_full_nodeid _run_allgrid_nodecmd_hlpr $*
+  nodecfg_iterate_nodeid _run_allgrid_nodecmd_hlpr $*
 }
 
 run_allgrid_nodecmd_cmd() {

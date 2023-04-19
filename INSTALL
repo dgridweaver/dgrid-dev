@@ -2,11 +2,11 @@ Install
 =======
 Let assume you will call your grid "alpha". 
 
-cd $HOME/tmp      # or somewhere like src/
+cd $HOME/tmp      # or somethink like src/
 git clone [repo]
 cd ./dgrid-devel/init
 ./initgrid.sh name=alpha dest=$HOME
 
 This will install first node of new grid into your $HOME directory. First part 
 of installation log will be in $HOME (in case if something go very wrong) , and
-second part(plus copy of first part) will be in $HOME/alpha/
+second part(plus copy of first part) will be in $HOME/alpha/not-in-vcs/initgrid_this/

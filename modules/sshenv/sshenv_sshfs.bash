@@ -18,7 +18,7 @@ sshenv_climenu_cmd_sshfs_list(){
 
 sshenv_sshfs_list_cli(){
   dbg_echo sshenv 5 F "Begin"
-  local mdir=${DGRID_dir_nodelocal}sshenv-sshfs
+  local mdir=${DGRID_dir_nodelocal}/sshenv-sshfs
   dbg_echo sshenv 8 F  "mount|grep $mdir"
   echo "---- current sshfs list ----"
   mount|grep $mdir

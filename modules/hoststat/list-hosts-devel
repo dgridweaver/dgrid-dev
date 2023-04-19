@@ -12,8 +12,8 @@ cd `dirname $_file0`
 
 ################## [END] dgrid header1 ################ 
 
-#source ${_dir0}/lib.sh
 main_exit_if_not_enabled hoststat
+#export MODINFO_dbg_hoststat=20
 
 hoststat_scan_all_at_once_sshkeyscan
 

@@ -1,1 +1,8 @@
-incoming_detect_type="sshkeyscan"
+#!/bin/bash
+
+#incoming_detect_type="sshkeyscan"
+#incoming_detect_type="nmap"
+incoming_detect_type="tcpport"
+
+hoststat_do_scan=1
+hoststat_tcpport_timeout=3

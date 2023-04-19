@@ -13,12 +13,8 @@ cd `dirname $_file0`
 ################## [END] dgrid header1 ################ 
 
 main_exit_if_not_enabled hoststat
-export MODINFO_dbg_hoststat=0
+#export MODINFO_dbg_hoststat=20
+#export MODINFO_dbg_hoststat=10
 
+hoststat_scan_identify_cli
 
-
-#mkdir -p "${GRIDBASEDIR}/not-in-vcs/"
-#export LOGFILE="${GRIDBASEDIR}/not-in-vcs/misc.log"
-
-#hoststat_scanhosts_cmd
-hoststat_pingpongsrv_simple

@@ -1,6 +1,7 @@
 name="sshenv"
 description="ssh wrapper for dgrid integration"
 group=addons
-depend=bashengine
+depend=run
+engine=bashengine
 core="1.x"
-version="1.x-0.5"
+version="1.x-0.6"

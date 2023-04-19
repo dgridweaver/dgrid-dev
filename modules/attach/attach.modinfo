@@ -1,6 +1,7 @@
 name="attach"
 description="attaching of new nodes to grid"
 group=base
-depend=bashengine
+engine=bashengine
+depend=run
 core="1.x"
-version="1.x-0.2"
+version="1.x-0.3"

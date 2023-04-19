@@ -1,6 +1,7 @@
 name="run"
 description="run/execute command on grid node(nodes)"
 group=base
-depend=bashengine
+depend=
+engine==bashengine
 core="1.x"
-version="1.x-0.7"
+version="1.x-0.8"

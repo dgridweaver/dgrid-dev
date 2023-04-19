@@ -16,17 +16,6 @@ cd ${_dir0}
 
 # devel debug utility, just in case...
 
-distr_cmd_less()
-{
-  if command -v less; then
-    less
-  else
-    cat
-  fi
-}
-
-
-
 #echo
 #echo "#########"
 echo

@@ -1,0 +1,6 @@
+name="mininode"
+description="create micro/mini dgrid node installation"
+group=base
+depend=
+engine=bashengine
+version="0.x-0.1"

@@ -6,11 +6,12 @@ cfgstack_cfg_thisnode() { # [API] [RECOMENDED]
   local _cfgfile=$1
 
   if [ x"$THIS_NODEID" == "x" ]; then
-    if [ x"$DGRID_f_allow_no_thisnode" == "x1" ]; then
+    if [ ! x"$DGRID_f_allow_no_thisnode" == "x1" ]; then
       echo "ERROR: cfgstack_cfg_thisnode(${_cfgfile}): THIS_NODE not defined" 1>&2
       generic_stacktrace 1>&2
       exit
     fi
+  else
     cfgstack_load_byid ${_cfgfile} ${THIS_NODEID}
   fi
 }
@@ -27,7 +28,7 @@ cfgstack_load_byid() { # [API] [RECOMENDED]
 ################################################################
 
 ################################################################
-# cfgstack_cfg_op etc/someconfig.conf $NODE_ID op=source|load|trace
+# cfgstack_cfg_op etc/someconfig.conf $NODE_ID op=source|load|trace|filenames
 ################################################################
 cfgstack_cfg_op() { # [API]
   # cmd : trace load filenames source
@@ -115,41 +116,19 @@ _cfgstack_filtercfg1() {
   while read s; do
     #echo "sssss $prefix $s"
     p0=$(generic_cut_param "=" 1 "$s")
-    p1=$(generic_cut_param "=" 2 "$s")
+    #p1=$(generic_cut_param "=" 2 "$s") 
+    # may be = in variable
+    p1=${s#$p0=}
     if [ -z "$p0" ]; then continue; fi
     if [[ ! "$p0" =~ ^[[:alnum:]_]+$  ]]; then continue; fi
     echo "${prefix}$p0=$p1"
   done
 }
 
-#cfgstack_loadshellcfg() {
-#  local cfgprefix=$1 var
-#  local cfg=$2
-#  cat $cfg | _cfgstack_filtercfg1
-#}
-
-
 cfgstack_load_stdout() {
   local cfg=$1
   cat $cfg | _cfgstack_filtercfg1
 }
-
-#    p0=$(generic_cut_param "=" 1 "$s")
-#    p1=$(generic_cut_param "=" 2 "$s")
-#    if [ -z "$p0" ]; then continue; fi
-#    if [ -z "$p1" ]; then continue; fi
-#    if [[ ! "$p0" =~ ^[[:alnum:]_]+$  ]]; then continue; fi
-#    local r="\"\'\`"
-#    if [[ "$p1" =~ $r  ]]; then continue; fi
-#    if [ -n "$keys" ]; then
-#      if generic_word_in_list $p0 $keys; then
-#        echo "${pref}${p0}=\"$p1\";"
-#      fi
-#    else
-#      echo "${pref}${p0}=\"$p1\";"
-#    fi
-  #| grep "^$cfgprefix"
-
 
 
 cfgstack_msg_trace() {
@@ -170,6 +149,24 @@ cfgstack_msgprintf_trace() {
 
 
 ##########################
+
+cfgstack_search_dir_list_grp() {
+  local g f i l="$*"
+  local tIFS="$IFS";IFS=","
+  for i in $l; do
+    IFS="$tIFS"
+      g=`nodecfg_grp_groups $i`
+      [ -n "$g" ] && l="$l,$g"
+  done
+  dbg_echo cfgstack 6 F "expanded grps: $l"
+  IFS=","
+  for i in $l; do
+    IFS="$tIFS"
+    f="$f `nodecfg_grp_cfgdir $i`"
+  done
+  echo -n $f
+}
+
 
 cfgstack_search_dir_list() {
   local apath apath1 apath2 LIST
@@ -196,14 +193,8 @@ cfgstack_search_dir_list() {
   fi
 
   dbg_echo cfgstack 5 F entityid=$entityid
-  #LIST="$LIST ${nodecfg_path}/$NODE_HOST"
-  ####listvar="NODE_GROUPS_append_$varid"
-  #dbg_echo cfgstack 5 F NODE_GROUPS_append= $NODE_GROUPS_append
-  #dbg_echo cfgstack 5 F NODE_GROUPS_dirs= $NODE_GROUPS_dirs
-  #LIST="$LIST $NODE_GROUPS_dirs"
-  #LIST="$LIST ${nodecfg_path}/${nodeid}"
 
-  LIST="$LIST ${nodecfg_latstime_prefix}"
+  LIST="$LIST ${nodecfg_lasttime_prefix}"
   dbg_echo cfgstack 8 F LIST="\"$LIST\""
   echo "export CFGSTACK_search_dir_list=\"${LIST}\""
   dbg_echo cfgstack 8 F End

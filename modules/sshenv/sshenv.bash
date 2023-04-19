@@ -12,14 +12,14 @@ source ${MODINFO_modpath_sshenv}/sshkeymgr.bash
 source ${MODINFO_modpath_sshenv}/sshenv_sshfs.bash
 
 #sshenv_CLIMENU_CMDS_LIST="ssh-config-update sshenv-update-sshconfig"
-sshenv_CLIMENU_CMDS_LIST="ssh-dg sshenv-install-id sshfs-mount sshfs-umount sshfs-list"
+sshenv_CLIMENU_CMDS_LIST="ssh-dg sshenv-install-id sshfs-mount sshfs-umount sshfs-list knownhost-save knownhost-check"
 
 # hook to define variables
 sshenv_envset_start(){
   #echo "export SSHENV_dir_local=\"${DGRID_dir_dotlocal}\""
   local SSHENV_dir_local=${DGRID_dir_nodelocal}
   echo "export SSHENV_dir_local=\"$SSHENV_dir_local\""
-  echo "export SSHENV_ssh_config_generated=\"${SSHENV_dir_local}sshenv/ssh_config\""
+  echo "export SSHENV_ssh_config_generated=\"${SSHENV_dir_local}/sshenv/ssh_config\""
 }
 
 sshenv_print_module_info() {
@@ -215,6 +215,15 @@ sshenv_climenu_cmd_sshenv_install_id(){
   sshenv_install_id_cli $@
 }
 
+sshenv_climenu_cmd_knownhost_save(){
+  sshenv_knownhost_save_cli $@
+}
+
+sshenv_climenu_cmd_knownhost_check(){
+  sshenv_knownhost_check_cli $@
+}
+
+
 sshenv_climenu_cmd_ssh_config_update(){
   sshenv_update_sshconfig_cli
 }
@@ -224,6 +233,30 @@ sshenv_climenu_cmd_ssh_dg(){
 }
 
 
+########################
+
+sshenv_knownhost_save_cli() {
+ dbg_echo sshenv 5 "Start: params=\"$@\"" 
+  local eid=$1 opt_p s
+  [ ! -n "$1" ] && distr_error "ERROR, exit." && distr_error_echo "sshenv_install_id_cli need parameter" && exit
+  distr_is_not_entityid $eid > /dev/null &&  distr_error "ERROR, \"$eid\" not entityid" &&  exit
+  
+  #hostcfg_hostid_exists $eid;  #[ ! $? == 0 ] && msg_echo sshenv 1 "ERROR: eid=\"$eid\" not exist"  && exit
+  hostcfg_hostid_load $eid
+  local cfgdir=`hostcfg_hostid_cfgdir $eid`
+  [ -z "$cfgdir" ] && msg_echo sshenv 1 "ERROR: cfgdir == \"\" "  && exit
+  
+  eval `connect_config $eid`
+  #generic_listvars CONNECT_
+  [ $CONNECT_sshport ] && opt_p="-p $CONNECT_sshport"
+  #[ -d $cfgdir ]
+  mkdir_ifnot $cfgdir/etc/
+  ssh-keyscan $opt_p $CONNECT_dnsname | cut -d " " -f2- | while read s; do echo "$HOST_id $s"; done | tee $cfgdir/etc/ssh_known_hosts 
+    #| tee $cfgdir/etc/ssh_known_hosts_raw 
+  #cat $cfgdir/etc/ssh_known_hosts_raw | 
+   # |tee $cfgdir/etc/ssh_known_hosts cat $cfgdir/etc/ssh_known_hosts| cut -d " " -f2- | while read s; do echo "$HOST_id $s"; done
+  
+}
 
 
 ########################
@@ -265,6 +298,8 @@ sshenv_cli_help() {
 #  dgridsys_s;echo "sshenv list|listsshproxy"
   dgridsys_s;echo "sshenv scp [params...] - wrapped scp"
   dgridsys_s;echo "sshenv ssh-copy-id [params...] - wrapped ssh-copy-id"
+  dgridsys_s;echo "sshenv knownhost-save [entityid] - save known_hosts for nodeid/hostid"
+  dgridsys_s;echo "sshenv knownhost-check [entityid] -check provided keys"
   dgridsys_s;echo "sshenv update-sshconfig - update(merge) config from all nodes and hosts"
   sshenv_cli_help_sshfs
 }
@@ -286,12 +321,10 @@ sshenv_cli_run() {
   if [ x${cmd} == x"" ]; then sshenv_cli_help; fi
   if [ x${cmd} == x"ssh" ]; then shift 2; sshenv_ssh $@; fi
   if [ x${cmd} == x"scp" ]; then shift 2; sshenv_scp $@;  fi
-  if [ x${cmd} == x"install-id" ]; then shift 2; sshenv_install_id_cli $*; fi
+  if [ x${cmd} == x"install-id" ]; then shift 2; sshenv_install_id_cli $@; fi
+  if [ x${cmd} == x"update-sshconfig" ]; then  shift 2; sshenv_update_sshconfig_cli $@; fi
 
-  if [ x${cmd} == x"update-sshconfig" ]; then
-    shift 2
-    sshenv_update_sshconfig_cli $*
-  fi
+  if [ x${cmd} == x"knownhost-save" ]; then shift 2; sshenv_knownhost_save_cli $@;  fi
 
   if [ x${cmd} == x"launch_proxy" -o x${cmd} == x"startsshproxy" -o x${cmd} == x"login" ]; then
     shift 2

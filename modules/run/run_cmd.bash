@@ -230,11 +230,6 @@ run_rmt_snippet() {
   fi
 
   ##############################################################
-  if [ x == x$rmt_NODE_USER ]; then
-    echo -n
-    export CONNECT_user=${rmt_NODE_USER}
-  fi
-  ############################################
 
   if [ -n "$CONNECT_exec_override" ]; then
     export CONNECT_exec=$CONNECT_exec_override
@@ -245,6 +240,7 @@ run_rmt_snippet() {
   fi
   dbg_echo run 4 CONNECT_type=$CONNECT_type
 
+  export CONNECT_user=$(generic_var_content_priority CONNECT_user rmt_NODE_USER)
   export CONNECT_env_wdir=$CONNECT_wdir
   export CONNECT_wdir=$(generic_var_content_priority CONNECT_wdir rmt_NODE_INSTPATH)
   export CONNECT_dnsname=$(generic_var_content_priority CONNECT_dnsname rmt_CONNECT_dnsname)

@@ -4,8 +4,8 @@
 
 
 #export MONITZG_timestamp=`system_timestamp_dirname`
-#export MONITZG_workdir="${GRIDBASEDIR}/not-in-vcs/monitdg/current-${MONITZG_timestamp}"
-export MONITZG_workdir="${GRIDBASEDIR}/not-in-vcs/monitdg/current"
+#export MONITZG_workdir="${DGRIDBASEDIR}/${DGRID_localdir}/monitdg/current-${MONITZG_timestamp}"
+export MONITZG_workdir="${DGRIDBASEDIR}/${DGRID_localdir}/monitdg/current"
 
 #monitdg_monit_CFG=$DGRIDDIR/
 export monitdg_config_name_use="monit-generated.conf"

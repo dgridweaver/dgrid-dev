@@ -1,10 +1,12 @@
-#hoststat_do_scan=0
-#hoststat_do_scan=1
+#hoststat_do_scan=0 # [0|1]
 
 #incoming_detect_type=nmap
 #incoming_detect_type=ping
 #incoming_detect_type=ssh
+incoming_detect_type="tcpport"
+
 
 #incoming_detect_type="sshkeyscan"
 
 #incoming_scanhst=<host name>
+

@@ -2,15 +2,23 @@
 
 export nodecfg_path="./${dgrid_bynodes_dir}"
 export nodecfg_system_prefix="./dgrid-site"
-export nodecfg_latstime_prefix="./not-in-vcs"
+export nodecfg_lasttime_prefix="./${DGRID_localdir}"
 
-export nodecfg_grppath="./bygroups"
+export nodecfg_grppath="${nodecfg_path} ${nodecfg_system_prefix}/etc/"
+
+############################################
+
+source ${MODINFO_modpath_nodecfg}/nodecfg_hst.bash
+source ${MODINFO_modpath_nodecfg}/nodecfg_cfgstack.bash
+source ${MODINFO_modpath_nodecfg}/nodecfg_grp.bash
+
+
 
 ############################################
 
 nodeconf_vars() {
   echo -n " " NODE_ID NODE_IDsuffix NODE_UUID NODE_HOST NODE_INSTPATH \
-    NODE_GROUPS_append NODE_hostname NODE_hostid NODE_USER " "
+    NODE_GROUPS NODE_hostname NODE_hostid NODE_USER NODE_type" "
 }
 
 nodeconf_vars_all() {
@@ -18,13 +26,10 @@ nodeconf_vars_all() {
 }
 
 nodeid_vars_all() { # [API]
-  #nodeid_vars
   nodeconf_vars
   echo -n " "
   hostid_vars_all
-  #hostinfo_vars
   echo -n " "
-  #hook_nodeid_vars
   main_call_hook nodeid_vars $*
 }
 
@@ -121,29 +126,22 @@ nodecfg_varid_from_nodeid() { # [API]
 }
 
 nodecfg_nodeid_exists() { # [API] [RECOMENDED]
-  #nodeconf_exists_nodeid $*
   local nodeid cfg
   nodeid=$1
 
-  if [ -z "$nodeid" ]; then
-    dbg_echo nodecfg 1 "nodecfg_nodeid_exists : empty nodeid"
-    return 1
-  fi
+  [ -z "$nodeid" ] && dbg_echo nodecfg 1 F "empty nodeid, error" && return 1
 
   cfg=$(nodecfg_nodeid_cfgfile $nodeid)
   dbg_echo nodecfg 10 "F nodecfg_nodeid_exists : cfg=$cfg"
 
-  if [ -z "$cfg" ]; then
-    return 1
-  fi
-
-  if [ -f $cfg ]; then
-    echo -n
-  else
-    return 1
-  fi
+  if [ -z "$cfg" ]; then return 1; fi
+  if [ ! -f $cfg ]; then return 1; fi
   return 0
 }
+nodecfg_nodeid_not_exists() { # [API] [RECOMENDED]
+  if nodecfg_nodeid_exists $@ ; then return 1; else return 0; fi
+}
+
 
 nodecfg_nodedir_list_set() {
   var=$(find $nodecfg_path -iname "*.nodeconf" | xargs --no-run-if-empty -n 1 dirname)
@@ -158,107 +156,17 @@ nodecfg_nodeconf_list_set() {
   export NODECFG_nodeconf_list="$var"
 }
 
-_nodeconf_load_nodeprefixed() {
-  local nodeid pref varprefix
-  echo -n
-  nodeid=$1
-
-  varid=$(nodecfg_varid_from_nodeid $nodeid)
-  #varsuffix=_$varid
-  varprefix="${varid}_"
-
-  _nodeconf_load $nodeid $varprefix
-}
-
 _nodeconf_load() {
-  #
-  local nodeid pref
-  nodeid=$1
-  pref=$2
-  pushd $DGRIDBASEDIR >/dev/null
+  local nodeid="$1"  pref="$2"
+  nodecfg_nodeid_not_exists $nodeid && distr_error "ERROR: no such node \"$nodeid\"" && return 1
 
-  # check if any node like this
-  nodecfg_nodeid_exists $nodeid
-  if [ $? == 0 ]; then
-    dbg_echo nodecfg 2 "_nodeconf_load : ok, node $nodeid found"
-  else
-    echo "ERROR: no such node \"$nodeid\""
-    exit
-  fi
-
-  unset $(nodeconf_vars_all)
-
-  #NODE_GROUPS_all=","
-
-  _nodeid_cfgfile=$(nodecfg_nodeid_cfgfile ${nodeid})
-  _nodeid_cfgdir=$(nodecfg_nodeid_cfgdir ${nodeid})
-
-  ##### ADDITIONAL CFG #######
-
-  #_path=${nodecfg_path}/${nodeid}/etc/nodeconf
-  _path=${_nodeid_cfgdir}/etc/nodeconf
-
-  if [ -d ${_path} ]; then
-
-    LISTFILES=$(find ${_path} -type f)
-    for cfg in $LISTFILES; do
-      varX=$(load_cfg_file_stdout $cfg nodeconf_vars_all)
-      #echo $varX;
-      eval $varX
-      NODE_GROUPS_all="$NODE_GROUPS_all $NODE_GROUPS_append"
-      #unset `nodeconf_vars_all`
-      unset NODE_GROUPS_append
-    done
-
-  fi
-
-  ####### MAIN CFG ###########
-
-  #cfg=${nodecfg_path}/${nodeid}/this.nodeconf
-  cfg=${_nodeid_cfgfile}
-
-  var1=$(load_cfg_file_stdout $cfg nodeconf_vars_all)
-  #echo $var1;
-  eval $var1
-  NODE_GROUPS_all="$NODE_GROUPS_all,$NODE_GROUPS_append"
-  #unset `nodeconf_vars_all`
-  unset NODE_GROUPS_append
-
-  #### groups #####
-  NODE_GROUPS_all=${NODE_GROUPS_all//,/ }
-  dbg_echo nodecfg 3 [2] NODE_GROUPS_all=$NODE_GROUPS_all
-  NODE_GROUPS_append=$NODE_GROUPS_all
-
-  export NODE_GROUPS_dirs
-
-  for grp in $NODE_GROUPS_all; do
-    cfg=${nodecfg_grppath}/${grp}/
-    #echo echo $cfg ";"
-    if [ -f ${cfg}/this.groupconf ]; then
-      dbg_echo nodecfg 3 [2] "$cfg : ok, this dir exists"
-      NODE_GROUPS_dirs="$NODE_GROUPS_dirs ${cfg}"
-    fi
-  done
-
-  ###### output  #####
-
-  for var in $(nodeconf_vars_all) NODE_GROUPS_dirs; do
-    if [ x"${!var}" == x ]; then
-      echo -n
-    else
-
-      # trim leading & ... spaces
-      res="${!var}"
-      res=$(generic_trim "$res")
-      read -r $var <<<"$res"
-
-      echo "export ${pref}${var}=\"${!var}\" ;"
-
-    #echo
-    fi
-  done
-  popd $DGRIDBASEDIR >/dev/null
+  local _nodeid_cfgfile=$(nodecfg_nodeid_cfgfile ${nodeid})
+  
+  #local var1=$(load_cfg_file_stdout ${_nodeid_cfgfile} nodeconf_vars_all)
+  load_cfg_file_stdout ${_nodeid_cfgfile} nodeconf_vars_all
+  #eval $var1
 }
+
 
 ############################
 
@@ -311,8 +219,7 @@ nodecfg_vars_list_set() {
 }
 
 nodecfg_nodeid_cfgfile() { # [API]
-  local _id var cfg cfg1
-  _id=$1
+  local var cfg cfg1 _id=$1
   var=$(nodecfg_varid_from_nodeid ${_id})
   var=NODECFG_cfgfile_$var
   dbg_echo nodecfg 6 "nodecfg_nodeid_cfgfile() : id=${_id} var=${var}"
@@ -320,12 +227,9 @@ nodecfg_nodeid_cfgfile() { # [API]
   echo -n ${!var}
 }
 nodecfg_nodeid_cfgdir() { # [API]
-  local _id var cfg cfg1
-  _id=$1
-  var=$(nodecfg_varid_from_nodeid ${_id})
-
+  local var cfg cfg1  _id=$1
+  var="$(nodecfg_varid_from_nodeid ${_id})"
   var=NODECFG_cfgdir_$var
-
   echo -n ${!var}
 }
 
@@ -386,56 +290,39 @@ nodecfg_nodeid_load_api() {
 
 }
 
-nodecfg_iterate_full_nodeid() { # [API] [RECOMENDED]
-  local func _id _nodeconf_vars_list _dir
-  func=$1
 
-  pushd $DGRIDBASEDIR >/dev/null
 
-  _nodeconf_vars_list=$(nodeid_vars_all)
-  unset ${_nodeconf_vars_list}
-  for _cfg in $NODECFG_nodeconf_list; do
-    _id=$(_nodecfg_nodeid_from_file ${_cfg})
-    nodecfg_nodeid_load $_id
-    dbg_echo nodecfg 3 "$NODE_ID node=$NODE_HOST"
-
-    # DEVELMARK
-    eval $func
-
-    unset ${_nodeconf_vars_list}
+nodecfg_iterate_nodeid() { # [API] [RECOMENDED]
+  local eid varX code="$1"
+  local nodeconf_vars_list="$(nodeconf_vars_all) $(hostfullconfig_vars_all)"
+  
+  [ -z "$nodeid_list" ] && nodeid_list="$NODECFG_nodeid_LIST"
+  
+  dbg_echo nodecfg 2 F nodeconf_vars_list=$nodeconf_vars_list
+  for eid in $nodeid_list ; do
+    nodecfg_nodeid_not_exists $eid && continue
+    
+    unset ${nodeconf_vars_list}
+    local ${nodeconf_vars_list}
+    
+    #varX=$(nodecfg_nodeid_load_stdout $eid )
+    varX=$( _nodeconf_load $eid )
+    eval "$varX" ; unset varX
+    
+    dbg_echo hostcfg 8 F "Iterate eid=$eid"
+    eval "$code"
   done
-  popd >/dev/null
 }
 
-nodecfg_iterate_simple_nodeid() {
-  local _dir f cfg
-  func=$1
 
-  pushd $DGRIDBASEDIR >/dev/null
 
-  _nodeconf_vars_list="$(nodeconf_vars_all) $(hostfullconfig_vars_all)"
-  unset ${_nodeconf_vars_list}
-
-  for cfg in $NODECFG_nodeconf_list; do
-    dbg_echo nodecfg 12 "cfg=$cfg"
-
-    varX=$(load_cfg_file_stdout $cfg nodeconf_vars_all)
-    eval $varX
-    dbg_echo nodecfg 20 "varX=\"$varX\""
-    hostcfg_hostid_load $NODE_HOST >/dev/null
-
-    # run iterate function
-    eval $func
-
-    unset ${_nodeconf_vars_list}
-  done
-  popd >/dev/null
-}
 
 _this_nodeid_detect_hlpr() {
   HOSTNAME=$(hostname)
   local check_hostname
 
+  hostcfg_hostid_load $NODE_HOST >/dev/null
+    
   dbg_echo this 3 NODE_INSTPATH=$NODE_INSTPATH DGRIDBASEDIR=$DGRIDBASEDIR
   dbg_echo this 3 NODE_hostname=\"$NODE_hostname\" HOSTNAME=\"$HOSTNAME\"
   dbg_echo this 3 "NODE_ID=$NODE_ID HOST_hostname=\"$HOST_hostname\""
@@ -450,46 +337,66 @@ _this_nodeid_detect_hlpr() {
     if [ x"$check_hostname" == x"$HOSTNAME" ]; then
       dbg_echo this 2 "THIS_NODEID=$NODE_ID"
       echo "export THIS_NODEID=$NODE_ID"
+      echo "export THIS_HOSTID=$NODE_HOST"
       return 0
     fi
   fi
   return 1
 }
 
+
+
 this_nodeid_detect() {
-  dbg_echo nodecfg 8 "this_nodeid_detect() start"
-  if [ -f ./not-in-vcs/etc/this-install.conf ]; then
-    source ./not-in-vcs/etc/this-install.conf
-    if [ x"$THIS_NODEID" == x ]; then
-      echo -n
-    else
+  dbg_echo this 8 F "start"
+  if [ -f ./${DGRID_localdir}/THIS/this-install.conf ]; then
+    dbg_echo this 8 F "THIS/this-install.conf found"
+    source ./${DGRID_localdir}/THIS/this-install.conf
+    if [ ! x"$THIS_NODEID" == x ]; then
       echo "export THIS_NODEID=$THIS_NODEID"
+      if [ ! x"$THIS_HOSTID" == x ]; then
+        echo "export THIS_HOSTID=$THIS_HOSTID"
+      else
+        echo "export THIS_HOSTID="`_nodecfg_nodeid_to_hostid $THIS_NODEID`
+      fi
       return
     fi
   fi
 
-  nodecfg_iterate_simple_nodeid _this_nodeid_detect_hlpr
+  nodecfg_iterate_nodeid _this_nodeid_detect_hlpr
 
-  dbg_echo nodecfg 8 "DGRIDBASEDIR=$DGRIDBASEDIR"
-  dbg_echo nodecfg 8 "this_nodeid_detect() end"
+  dbg_echo this 8 F "DGRIDBASEDIR=$DGRIDBASEDIR"
+  dbg_echo this 8 F "end"
+}
+
+_nodecfg_nodeid_to_hostid(){ # [API]
+  local tmp p=$1
+  [[ ! $p == *"@"* ]] && distr_error "no \"@\" ; " && return 1
+  [[ ! $p == *":"* ]] && distr_error "no \":\" ; " && return 1
+  tmp=`generic_cut_param "@" 2 $p`
+  echo -n `generic_cut_param ":" 1 $tmp`
 }
 
 nodecfg_envset_prestart() {
-  dbg_echo nodecfg 2 "nodecfg_envset_prestart(): START"
+  local v
+  dbg_echo nodecfg 2 F "START"
   nodecfg_nodedir_list_set
   nodecfg_nodeconf_list_set
   nodecfg_vars_list_set
   dbg_echo nodecfg 4 "nodecfg_envset_prestart(): call hostcfg_hostconf_list_set"
   hostcfg_hostconf_list_set
   hostcfg_vars_list_set
-  dbg_echo nodecfg 4 "nodecfg_envset_prestart(): call this_nodeid_detect"
-  dbg_echo nodecfg 2 "nodecfg_envset_prestart(): END"
+  
+  nodecfg_grp_list_set
+
+  dbg_echo nodecfg 2 F "END"
 }
 nodecfg_envset_prestart2() {
   dbg_echo nodecfg 2 "nodecfg_envset_prestart2(): START"
+  nodecfg_grp_nodeid_list_set
 
   if [ x$dgrid_this_nodeid_notcached == "x1" ]; then
     dbg_echo nodecfg 4 "dgrid_this_nodeid_notcached == 1, so no this_nodeid cache"
+    dbg_echo nodecfg 4 F "call this_nodeid_detect"
     this_nodeid_detect
   else
     cache_wrap_func this_nodeid_detect this_nodeid_detect
@@ -497,5 +404,3 @@ nodecfg_envset_prestart2() {
   dbg_echo nodecfg 2 "nodecfg_envset_prestart2(): END"
 }
 
-source ${MODINFO_modpath_nodecfg}/hostcfg.bash
-source ${MODINFO_modpath_nodecfg}/nodecfg_cfgstack.bash

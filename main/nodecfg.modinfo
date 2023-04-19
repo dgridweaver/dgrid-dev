@@ -3,6 +3,6 @@ description="node cfg support, *main*"
 depend="bashengine"
 group="core"
 core="1.x"
-version="1.x-0.14"
+version="1.x-0.15"
 
 

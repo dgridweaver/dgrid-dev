@@ -7,6 +7,7 @@ else
 fi
 
 #MODINFO_dbg_climenu=0
+MODINFO_msg_climenu=2
 #MODINFO_enable_climenu=
 #source ${MODINFO_modpath_climenu}/climenu.defaultvalues
 
@@ -156,27 +157,24 @@ climenu_run_climenu_op_do() {
 #}
 climenu_list_cli()
 {
-  for m in $MODULE_list_enabled; do
-    var="${m}_CLIMENU_CMDS_LIST"
-    for v in ${!var}; do
-      echo "$v:$m"
-    done
-  done
+  delim=":" climenu_list
 }
-
-
 
 climenu_list() # [API]  #usage: delim=":" climenu_list
 {
-  if [ ! -n $delim ]; then
-    delim=" "
-  fi
+  dbg_echo climenu 8 "F Begin MODULE_list_enabled=$MODULE_list_enabled"
+  [ ! -n $delim ] && delim=" "
+  
+  local tIFS="$IFS"; IFS=" "
   for m in $MODULE_list_enabled; do
+    #dbg_echo climenu 10 "F m=$m"
     var="${m}_CLIMENU_CMDS_LIST"
     for v in ${!var}; do
       echo "$v:$m"
     done
   done
+  local IFS=$tIFS
+  dbg_echo climenu 8 "F End"
 }
 
 

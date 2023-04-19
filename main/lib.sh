@@ -76,7 +76,16 @@ _generic_stacktrace_do() {
 }
 
 generic_trim() {
-  echo $1
+  echo -n $*
+}
+
+generic_trim2() {
+  local var="$*"
+  # remove leading whitespace characters
+  var="${var#"${var%%[![:space:]]*}"}"
+  # remove trailing whitespace characters
+  var="${var%"${var##*[![:space:]]}"}"
+  printf '%s' "$var"
 }
 
 dbg_echo_var_stderr() {

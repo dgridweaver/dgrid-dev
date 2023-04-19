@@ -121,9 +121,7 @@ hostcfg_hostid_load() { # [API] [RECOMENDED]
 }
 
 hostcfg_hostid_load_stdout() { # [API] [RECOMENDED]
-  local _hostid cfgfile varX i var hostid_vars_list _pref
-  _hostid=$1
-  _pref=$2
+  local cfgfile varX i var hostid_vars_list _hostid=$1 _pref=$2
   dbg_echo hostcfg 4 "hostcfg_hostid_load() start"
 
   if [ x"${_hostid}" == "x" ]; then
@@ -173,38 +171,25 @@ $(main_call_hook hostid_load_api ${_hostid} ${_pref})"
 
 }
 
-function hostcfg_iterate_hostid { # [API] [RECOMENDED]
-  local hostinfo_vars_list code F varX
-
-  code=$1
-  pushd $DGRIDBASEDIR >/dev/null
-
-  hostinfo_vars_list=$(hostid_vars_all)
-  dbg_echo nodecfg 2 hostcfg_iterate_hostid [2] hostinfo_vars_list=$hostinfo_vars_list
-
-  find $nodecfg_path -iname "*.hostinfo" | while read F; do
+hostcfg_iterate_hostid() { # [API] [RECOMENDED]
+  local hostinfo_vars_list varX hst code="$1"
+  local hostinfo_vars_list=$(hostid_vars_all)
+  dbg_echo hostcfg 2 F hostinfo_vars_list=$hostinfo_vars_list
+  [ -z "$hostid_list" ] && hostid_list="$NODECFG_hostid_LIST"
+  
+  for hst in $hostid_list ; do
     unset $hostinfo_vars_list
 
-    varX=$(hostinfo_loadconf_stdio $F)
-    eval $varX
-    unset varX
+    varX=$(hostcfg_hostid_load_stdout $hst) # $HOST_id
+    eval $varX ; unset varX
 
-    varX=$(hostcfg_hostid_load_stdout $HOST_id)
-    eval $varX
-    unset varX
-
-    dbg_echo hostcfg 1 hostcfg_iterate_hostid [2] incoming_scanhst=$incoming_scanhst
-    dbg_echo hostcfg 1 hostcfg_iterate_hostid [2] incoming_detect_type=$incoming_detect_type
-
-    _dir=$(dirname $F)
-    export cfgfile_dir=$_dir
+    dbg_echo hostcfg 8 F "Iterate hostid=$hst"
     eval "$code"
 
-    unset $hostinfo_vars_list
   done
-
-  popd >/dev/null
+  unset $hostinfo_vars_list
 }
+
 
 ############################################################
 
@@ -283,25 +268,17 @@ nodecfg_add_hostcfg() {
 }
 
 hostcfg_hostid_exists() { # [API] [RECOMENDED]
-  #nodeconf_exists_nodeid $*
-  local hostid cfg
-  hostid=$1
-
-  if [ -z "$hostid" ]; then
-    echo "hostcfg_hostid_exists : empty nodeid"
-    return 1
-  fi
+  local cfg hostid=$1
+  [ -z "$hostid" ] && distr_error "empty nodeid" && return 1
 
   cfg=$(hostcfg_hostid_cfgfile $hostid)
 
-  if [ -z "$cfg" ]; then
-    return 1
-  fi
-
-  if [ -f $cfg ]; then
-    echo -n
-  else
-    return 1
-  fi
+  if [ -z "$cfg" ]; then return 1; fi
+  if [ ! -f $cfg ]; then return 1; fi
   return 0
 }
+hostcfg_hostid_not_exists() { # [API] [RECOMENDED]
+  if hostcfg_hostid_exists $@ ; then return 1; else return 0; fi
+}
+
+

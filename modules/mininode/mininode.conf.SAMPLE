@@ -1,0 +1,8 @@
+#!/bin/bash
+
+#enable <modname>
+#disable <modname>
+#dgrid_site_full
+#force_THIS_NODEID 1 # [1|0]
+
+

@@ -28,6 +28,25 @@ nodecfg_gethostlist() {
   hostcfg_iterate_hostid 'nodecfg_gethostlist_hlpr'
 }
 
+####################
+
+
+_nodecfg_groups_cli_hlpr(){
+  local t # $GRP_type
+  #[ GRP_type ]
+  
+  printf "%10s | %8s\n" $GRP_ID $t
+
+}
+
+nodecfg_groups_cli(){
+  nodecfg_iterate_grp _nodecfg_groups_cli_hlpr
+}
+
+
+
+####################
+
 _nodecfg_nodelist_col1() {
   var=$1
   _name=$2
@@ -146,7 +165,7 @@ dgridsys_cli_help_nodecfg() {
   dgridsys_s; echo "nodecfg hostlist - list hostid"
   dgridsys_s; echo "nodecfg nodelist - list nodeid"
   dgridsys_s; echo "nodecfg nodelist-full - list nodeid info"
-
+  dgridsys_s; echo "nodecfg groups - list groups"
 }
 
 _add_hostcfg_hlpr() {
@@ -178,6 +197,16 @@ dgridsys_cli_nodecfg() {
     echo
     return
   fi
+
+  if [ x$cmd == x"groups" ]; then
+    #echo
+    echo "------ groups list --------"
+    nodecfg_groups_cli
+    echo
+    return
+  fi
+
+
 
   if [ x$cmd == x"nodelist-full" ]; then
     #echo

@@ -58,7 +58,7 @@ dgrid_dir_variables_set() {
   DGRID_dir_dotcache="$HOME/.cache/${DGRID_dirname}"
   echo "export DGRID_dir_dotcache=\"$DGRID_dir_dotcache\" ;"
 
-  DGRID_dir_nodelocal="$DGRIDBASEDIR/not-in-vcs"
+  DGRID_dir_nodelocal="$DGRIDBASEDIR/${DGRID_localdir}"
   echo "export DGRID_dir_nodelocal=\"$DGRID_dir_nodelocal\" ;"
   
   DGRID_dir_memory=`dirname $cache_path`
@@ -67,8 +67,8 @@ dgrid_dir_variables_set() {
 }
 
 system_env_start() {
-  cfgstack_cfg_thisnode "etc/system.conf"
   source ${MODINFO_modpath_system}/system.defaultvalues
+  [ -n "$THIS_NODEID" ] && cfgstack_cfg_thisnode "etc/system.conf"
 
   if [ x$system_dgrid_sample_node_dir == "x" ]; then
     echo "ERROR: system_dgrid_sample_node_dir no have  default value"

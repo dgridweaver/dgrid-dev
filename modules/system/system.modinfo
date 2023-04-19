@@ -1,7 +1,8 @@
 name="system"
 description="system like things"
 group=core
-depend=bashengine
+depend=
+engine=bashengine
 core="1.x"
-version="1.x-0.6"
+version="1.x-0.7"
 distribution_mode="1"

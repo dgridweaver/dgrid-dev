@@ -13,16 +13,8 @@ cd `dirname $_file0`
 ################## [END] dgrid header1 ################ 
 
 main_exit_if_not_enabled hoststat
-export MODINFO_dbg_hoststat=0
+#export MODINFO_dbg_hoststat=20
+#export MODINFO_dbg_hoststat=10
 
+hoststat_scanhosts_cli
 
-
-#mkdir -p "${GRIDBASEDIR}/not-in-vcs/"
-#export LOGFILE="${GRIDBASEDIR}/not-in-vcs/misc.log"
-
-#hoststat_scanhosts_cmd
-if [ x$1 == x ]; then
-echo "usage: $0 <nodeid>"
-fi
-
-hoststat_pingpong_cicle_simple $1
